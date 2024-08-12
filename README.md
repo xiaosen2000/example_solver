@@ -45,8 +45,8 @@ SOLANA_KEYPAIR=""
 BRIDGE_TOKEN="USDT" # USDT or PICA
 COMISSION="10" # if COMISSION == "1"-> 0.01%
 SOLVER_ID="" # Given by Composable
-SOLVER_PRIVATE_KEY="" # Given by Composable
-COMPOSABLE_ENDPOINT="" # IP address Given by Composable
+COMPOSABLE_ENDPOINT="" # ws IP address Given by Composable
+SOLVER_PRIVATE_KEY="" # ETH private_key
 ```
 ## Step 2: Provide Gas on Chains
 The solver must provide some gas on the chains they want to operate. This gas is needed for the auctioner to perform operations such as declaring the auction winner and updating the highest bid, all on-chain. Note that gas is only required on the destination chain where the user intends to receive the token_out of their intent.
