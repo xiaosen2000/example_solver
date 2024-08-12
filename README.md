@@ -46,7 +46,52 @@ The Rollup enables MANTIS to operate efficiently while preserving the principles
 
 ---
 
-Together, these four components create a robust system that facilitates cross-chain interactions in a secure, decentralized, and efficient manner. MANTIS V0 is a step forward in realizing the full potential of decentralized finance across multiple blockchains.
+# Cross-Chain Domain vs. Single Domain Options
+
+MANTIS V0 empowers users with two flexible transaction options: **Cross-Chain Domain** and **Single Domain**. Both are designed to ensure secure, efficient, and decentralized operations, but each offers unique capabilities.
+
+---
+
+## 🌉 Cross-Chain Domain: Connecting the Blockchains
+
+The **Cross-Chain Domain** lets you traverse different blockchains effortlessly. Currently, we support:
+
+- 🟣 **Ethereum**
+- 🟠 **Solana**
+
+*(More blockchains are on the horizon!)*
+
+### 🔄 How It Works:
+In this domain, you can submit intents that involve transactions across chains. Picture this, for example:
+
+- **🟣 Start on Ethereum:** Swap a token on Ethereum (your source chain).
+- **🟠 End on Solana:** Receive the token on Solana (your destination chain).
+
+### 🚀 The Role of Solvers:
+Solvers are the unsung heroes making these cross-chain journeys possible. They:
+
+- 🛠️ **Bridge the Gap:** By holding tokens like **USDT** or **PICA**, solvers enable swift and secure cross-chain swaps.
+- ⏩ **Ensure Speed:** Solvers are positioned in the middle, ensuring that cross-chain intents are completed quickly.
+
+This option is perfect for users looking to move assets between blockchains seamlessly.
+
+---
+
+## 🔗 Single Domain: Mastering a Single Chain
+
+For those who prefer to stay within one blockchain, the **Single Domain** is your go-to. It supports:
+
+- 🟣 **Ethereum**
+- 🟠 **Solana**
+
+*(And yes, more chains will be available soon!)*
+
+### 📈 How It Works:
+In the Single Domain, users submit intents and solvers execute them entirely within the same blockchain. Whether you're trading or performing other operations, it all happens within a single chain’s ecosystem.
+
+### 🛡️ Security & Efficiency:
+Both Single Domain and Cross-Chain Domain options are designed with the highest standards of security and efficiency, ensuring peace of mind for both users and solvers.
+
 
 
 ## 🔄 Interaction Flow
