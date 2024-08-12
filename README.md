@@ -148,7 +148,7 @@ pub static SOLVER_ADDRESSES: &[&str] = &[
 ## Step 1: Fill the .env File
 The first thing you need to do is fill out the `.env` file. Use the provided `env.example` as a template:
 ```rust
-ETHEREUM_RPC="" # ws
+ETHEREUM_RPC="" # https
 ETHEREUM_PKEY=""
 SOLANA_RPC="" # https
 SOLANA_KEYPAIR=""
