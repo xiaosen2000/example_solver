@@ -193,7 +193,7 @@ User wants 20000000, you can provide 95137240
 Object {
     "code": Number(4),
     "msg": Object {
-        "amount": Number(0),
+        "amount": Number(95137240),
         "intent_id": String("RVcwGSrL"),
         "msg": String("You won this auction!"),
     },
