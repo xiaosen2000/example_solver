@@ -130,13 +130,9 @@ By managing the flow of intents, broadcasting them to solvers, determining winne
 
 # Solver Setup Instructions
 
-# 🔧 Important Configuration: `SOLVER_ADDRESSES` in `chains/mod.rs`
+## 🔧 Important Configuration: `SOLVER_ADDRESSES` in `chains/mod.rs`
 
 When setting up as a solver within the MANTIS V0 system, one crucial variable you need to pay attention to is `SOLVER_ADDRESSES` located in the `chains/mod.rs` file. This variable is vital for ensuring that your solver is correctly recognized on the blockchain networks where you are solving intents.
-
----
-
-## 📝 What is `SOLVER_ADDRESSES`?
 
 The `SOLVER_ADDRESSES` variable is a static array that holds the addresses your solver uses on the respective blockchains. Each entry in this array corresponds to the specific chain where you will be solving intents.
 
@@ -162,10 +158,9 @@ SOLVER_ID="" # Given by Composable
 COMPOSABLE_ENDPOINT="" # ws IP address Given by Composable
 SOLVER_PRIVATE_KEY="" # ETH private_key
 ```
-## Step 2: Provide Gas on Chains
-The solver must provide some gas on the chains they want to operate. This gas is needed for the auctioner to perform operations such as declaring the auction winner and updating the highest bid, all on-chain. Note that gas is only required on the destination chain where the user intends to receive the token_out of their intent.
-- On Ethereum, $100 is sufficient to solve about 10-15 intents.
-- On Solana, with 1$ is enough to make more than 100 even 1000 intetns
+## Step 2: Provide Gas on Ethereum chain to Auctioner
+The solver must provide some gas on ethereum chain to operate. This gas is needed for the auctioner to perform operations such as declaring the auction winner and updating the highest bid, all on-chain. Note that gas is only required on the destination chain where the user intents to receive the token_out of their intent.
+- On Ethereum, Auctioner charge 6$ with gas price 10Gwei per intent solved. Solver already have in count this by charging to user a flat fee of 10$, this can be mofified on `FLAT_FEES` on `routers/mod.rs`, you can even be more accurate getting the gas price on that moment.
 
 ## Step 3: Check Remaining Gas in the Auctioner
 You can check how much gas is remaining in the auctioner by making this HTTP request:
