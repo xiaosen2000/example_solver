@@ -131,7 +131,7 @@ curl -X POST http://composable_endpoint/submit_intent \
 ```bash
 {
    "code": 0,
-   "msg": "Error parsing PostIntentSwapInfo"
+   "msg": msg_error
 }
 ```
 
@@ -160,7 +160,7 @@ curl -X POST http://composable_endpoint/prove_intent \
 ```bash
 {
    "code": 0,
-   "msg": error_msg // "Error, Intent not proved" OR "Error parsing IntentProof"
+   "msg": error_msg 
 }
 ```
 
@@ -194,7 +194,7 @@ curl -X POST http://composable_endpoint/prove_intent \
 ```bash
 {
    "code": 0,
-   "msg": "Error checking the solver signature"
+   "msg": msg_error
 }
 ```
 
@@ -226,9 +226,7 @@ curl -X POST http://composable_endpoint/prove_intent \
 ```bash
 {
    "code": 0,
-   "msg": error_msg // "Auction finished for this intent_id"
-                    // OR "No auction found for this intent_id"
-                    // OR "No solver participated in this auction"
+   "msg": msg_error
 }
 ```
 
