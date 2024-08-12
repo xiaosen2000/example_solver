@@ -152,7 +152,7 @@ Here’s how it looks in the code:
 
 ```rust
 pub static SOLVER_ADDRESSES: &[&str] = &[
-    "0x...", // ethereum, MUST be the same the pubkey of ETHEREUM_PKEY on .env!
+    "0x...", // ethereum, MUST be the pubkey of ETHEREUM_PKEY on .env!
     "CM...", // solana
 ];
 ```
