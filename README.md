@@ -173,6 +173,32 @@ To run the solver, use the following command:
 ```sh
 cargo run --release
 ```
+this is the kind of messages you want to see if you are made things right:
+```rust
+Object {
+    "code": Number(3),
+    "msg": String("Solver was succesfully registered"),
+}
+
+Object {
+    "code": Number(1),
+    "msg": Object {
+        "intent": "...", // intent_info
+        "intent_id": String("RVcwGSrL"),
+    },
+}
+
+User wants 20000000, you can provide 95137240
+
+Object {
+    "code": Number(4),
+    "msg": Object {
+        "amount": Number(0),
+        "intent_id": String("RVcwGSrL"),
+        "msg": String("You won this auction!"),
+    },
+}
+```
 
 Inside the `example_solver`, we have two main folders: `routers` and `chains`.
 
