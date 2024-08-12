@@ -103,7 +103,7 @@ Both Single Domain and Cross-Chain Domain options are designed with the highest 
 
 
 
-## 🔄 Interaction Flow
+# 🔄 Interaction Flow
 
 1. **👥 User Submits Intents**
    - Users submit their intents to the Auctioneer. An intent specifies the details of a transaction, including the source chain, destination chain, and other relevant parameters. This submission is the initial step in the process.
