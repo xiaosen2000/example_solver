@@ -97,11 +97,7 @@ In the Single Domain, users submit intents and solvers execute them entirely wit
 ### 🛡️ Security & Efficiency:
 Both Single Domain and Cross-Chain Domain options are designed with the highest standards of security and efficiency, ensuring peace of mind for both users and solvers.
 
-
-
-
-
-
+---
 
 # 🔄 Interaction Flow
 
@@ -127,6 +123,22 @@ Both Single Domain and Cross-Chain Domain options are designed with the highest 
    - The rollup is responsible for storing information and executing the logic that governs the Auctioneer's operations. This setup ensures that the system remains decentralized and trustless, meaning that no single entity has control over the process, and all actions can be verified independently by participants in the network.
 
 By managing the flow of intents, broadcasting them to solvers, determining winners, and ensuring transactions are executed and stored properly, the Auctioneer facilitates seamless and secure interactions within a decentralized ecosystem.
+
+---
+
+## 🔑 Message Signing Process
+
+1. **Keccak Hashing:**  
+   - The first step is to generate a unique hash of the message. This is done using the Keccak-256 algorithm, which produces a fixed-size 256-bit hash.
+
+2. **Signing the Message:**  
+   - The solver then signs this hashed message using their Ethereum private key. This signature is a cryptographic proof that the message was indeed created by the owner of the private key.
+
+3. **Verification by Auctioneer:**  
+   - When the auctioneer receives the signed message, it verifies the signature. This is done by comparing the Ethereum address that corresponds to the private key (from which the signature was derived) with the address provided in the `SOLVER_ADDRESSES`.
+   - If the addresses match, the auctioneer confirms that the message is authentic and that it was sent by the correct solver.
+
+---
 
 # Solver Setup Instructions
 
