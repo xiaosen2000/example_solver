@@ -56,7 +56,7 @@ The solver must provide some gas on the chains they want to operate. This gas is
 ## Step 3: Check Remaining Gas in the Auctioner
 You can check how much gas is remaining in the auctioner by making this HTTP request:
 ```bash
-// TO DO
+curl -X GET http://composable_endpoint/get_gas_solver?0x61e3d9e355e7cef2d685adf4d917586f9350e298 
 ```
 
 ## Step 4: Run the Solver
@@ -87,6 +87,20 @@ This function is used when the solver wins the auction and is solving the intent
 
 **Composable Endpoint:**  
 `http://16.171.172.151:80` // 🏗️  upgrading to V1
+
+### Ping
+`/ping`
+```bash
+curl -X GET http://0.0.0.0:8081/ping 
+```
+
+### Response:
+**OK:**
+```bash
+{
+   "msg": "pong"
+}
+```
 
 ### Submit an Intent  
 `/submit_intent`
@@ -164,10 +178,53 @@ curl -X POST http://composable_endpoint/prove_intent \
 }
 ```
 
-## 🌐 Auctioner Interaction with Solver (WS)
+## 🌐 Auctioner Interaction with Solver (HTTP & WS)
 
+## HTTP:
 **Composable Endpoint:**  
-`ws://16.171.172.151:443` 🏗️  upgrading to V1
+`http://16.171.172.151:80` 🏗️  upgrading to V1
+
+### Ping
+`/ping`
+```bash
+curl -X GET http://0.0.0.0:8081/ping 
+```
+
+### Response:
+**OK:**
+```bash
+{
+   "msg": "pong"
+}
+```
+
+### Get ETH gas deposited on the Auctioner address (necessary to solve intents):
+`/get_gas_solver`
+
+```bash
+curl -X GET http://composable_endpoint/get_gas_solver?0x61e3d9e355e7cef2d685adf4d917586f9350e298 
+```
+
+### Response:
+**OK:**
+```bash
+{
+   "code": 6,
+   "msg": "The address 0x.. has X wei on Auctioner"
+}
+```
+
+**ERROR:**
+```bash
+{
+   "code": 0,
+   "msg": error_msg 
+}
+```
+
+## WS:
+**Composable Endpoint:**  
+`ws://16.171.172.151:443`  🏗️  upgrading to V1
 
 ### Register Solver Addresses (one address per chain)
 ```bash
