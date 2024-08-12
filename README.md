@@ -226,7 +226,7 @@ This function is used when the solver wins the auction and is solving the intent
 ### Ping
 `/ping`
 ```rust
-curl -X GET http://0.0.0.0:8081/ping 
+curl -X GET http://composable_endpoint/ping 
 ```
 
 ### Response:
@@ -322,7 +322,7 @@ curl -X POST http://composable_endpoint/prove_intent \
 ### Ping
 `/ping`
 ```rust
-curl -X GET http://0.0.0.0:8081/ping 
+curl -X GET http://composable_endpoint/ping 
 ```
 
 ### Response:
