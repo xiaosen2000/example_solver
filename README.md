@@ -4,9 +4,50 @@
 [![Twitter Follow](https://img.shields.io/twitter/follow/mantis?style=social)](https://x.com/mantis)
 [![Website](https://img.shields.io/badge/website-ComposableFoundation-blue)](https://www.composablefoundation.com/)
 
-## What is Auctioneer?
+MANTIS V0 is a cutting-edge system designed to enable seamless, decentralized interactions across multiple blockchains. It relies on **four key components** to ensure that transactions are executed efficiently, securely, and without the need for a trusted third party. Let's explore these components:
 
-The **Auctioneer** is a third-party off-chain entity that plays a crucial role in facilitating interactions between users, solvers, and the rollup within a decentralized and trustless system. Here’s an overview of how the Auctioneer operates:
+---
+
+## 1. 🎯 The Auctioneer
+The **Auctioneer** is an essential off-chain entity that orchestrates the entire transaction process. It acts as a bridge between users, solvers, and the blockchain networks. The Auctioneer’s primary roles include:
+
+- **Receiving Intents:** Users submit transaction intents to the Auctioneer, specifying details like source and destination chains.
+- **Broadcasting to Solvers:** The Auctioneer broadcasts these intents to solvers, who compete to execute the transactions.
+- **Determining the Winner:** After solvers submit their bids, the Auctioneer selects the best bid based on criteria like speed, cost, and reliability.
+
+---
+
+## 2. 🛠️ The Solvers
+**Solvers** are entities capable of executing the transactions described in the intents. They listen for intents broadcasted by the Auctioneer and decide whether to participate in the auction. The solvers’ responsibilities include:
+
+- **Bidding:** Solvers analyze the intents and submit bids to execute the transaction.
+- **Executing Transactions:** The winning solver executes the transaction on the destination chain, ensuring the intent is fulfilled as specified.
+
+---
+
+## 3. 🔐 Smart Contracts on Each Chain
+Smart contracts deployed on each blockchain play a pivotal role in the system. These contracts are responsible for:
+
+- **Escrow Management:** Handling the secure transfer of funds between chains.
+- **Execution Logic:** Enforcing the rules that govern how transactions are processed and validated on each chain.
+
+These smart contracts ensure that transactions are executed in a trustless and secure manner, with no need for intermediaries.
+
+---
+
+## 4. 🌐 The Rollup: Where MANTIS Runs
+The **Rollup** is the backbone of the MANTIS V0 system, providing a scalable and secure environment for processing transactions. It serves several critical functions:
+
+- **Aggregation:** Collecting and storing multiple transactions in a compressed format.
+- **Decentralization:** Maintaining the logic that governs the Auctioneer’s operations, ensuring the entire process remains decentralized.
+- **Security:** Ensuring that all actions are transparent and can be independently verified by participants.
+
+The Rollup enables MANTIS to operate efficiently while preserving the principles of decentralization and trustlessness.
+
+---
+
+Together, these four components create a robust system that facilitates cross-chain interactions in a secure, decentralized, and efficient manner. MANTIS V0 is a step forward in realizing the full potential of decentralized finance across multiple blockchains.
+
 
 ## 🔄 Interaction Flow
 
