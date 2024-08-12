@@ -75,7 +75,7 @@ In this domain, you can submit intents that involve transactions across chains. 
 ### 🚀 The Role of Solvers:
 Solvers are the unsung heroes making these cross-chain journeys possible. They:
 
-- 🛠️ **Bridge the Gap:** By holding tokens like **USDT** or **PICA**, solvers enable swift and secure cross-chain swaps.
+- 🛠️ **Bridge the Gap:** By holding **USDT**, solvers enable swift and secure cross-chain swaps.
 - ⏩ **Ensure Speed:** Solvers are positioned in the middle, ensuring that cross-chain intents are completed quickly.
 
 This option is perfect for users looking to move assets between blockchains seamlessly.
@@ -152,7 +152,7 @@ ETHEREUM_RPC="" # https
 ETHEREUM_PKEY=""
 SOLANA_RPC="" # https
 SOLANA_KEYPAIR=""
-BRIDGE_TOKEN="USDT" # USDT or PICA
+BRIDGE_TOKEN="USDT" # USDT
 COMISSION="10" # if COMISSION == "1"-> 0.01%
 SOLVER_ID="" # Given by Composable
 COMPOSABLE_ENDPOINT="" # ws IP address Given by Composable
@@ -173,7 +173,7 @@ To run the solver, use the following command:
 ```sh
 cargo run --release
 ```
-this is the kind of messages you want to see if you are made things right:
+this is the kind of messages you want to see if you made things right:
 ```rust
 Object {
     "code": Number(3),
