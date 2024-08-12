@@ -130,6 +130,25 @@ By managing the flow of intents, broadcasting them to solvers, determining winne
 
 # Solver Setup Instructions
 
+# 🔧 Important Configuration: `SOLVER_ADDRESSES` in `chains/mod.rs`
+
+When setting up as a solver within the MANTIS V0 system, one crucial variable you need to pay attention to is `SOLVER_ADDRESSES` located in the `chains/mod.rs` file. This variable is vital for ensuring that your solver is correctly recognized on the blockchain networks where you are solving intents.
+
+---
+
+## 📝 What is `SOLVER_ADDRESSES`?
+
+The `SOLVER_ADDRESSES` variable is a static array that holds the addresses your solver uses on the respective blockchains. Each entry in this array corresponds to the specific chain where you will be solving intents.
+
+Here’s how it looks in the code:
+
+```rust
+pub static SOLVER_ADDRESSES: &[&str] = &[
+    "0x...", // ethereum
+    "CM...", // solana
+];
+```
+
 ## Step 1: Fill the .env File
 The first thing you need to do is fill out the `.env` file. Use the provided `env.example` as a template:
 ```bash
