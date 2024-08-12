@@ -147,7 +147,7 @@ pub static SOLVER_ADDRESSES: &[&str] = &[
 
 ## Step 1: Fill the .env File
 The first thing you need to do is fill out the `.env` file. Use the provided `env.example` as a template:
-```bash
+```rust
 ETHEREUM_RPC="" # ws
 ETHEREUM_PKEY=""
 SOLANA_RPC="" # https
@@ -164,7 +164,7 @@ The solver must provide some gas on ethereum chain to operate. This gas is neede
 
 ## Step 3: Check Remaining Gas in the Auctioner
 You can check how much gas is remaining in the auctioner by making this HTTP request:
-```bash
+```rust
 curl -X GET http://composable_endpoint/get_gas_solver?0x61e3d9e355e7cef2d685adf4d917586f9350e298 
 ```
 
@@ -225,13 +225,13 @@ This function is used when the solver wins the auction and is solving the intent
 
 ### Ping
 `/ping`
-```bash
+```rust
 curl -X GET http://0.0.0.0:8081/ping 
 ```
 
 ### Response:
 **OK:**
-```bash
+```rust
 {
    "msg": "pong"
 }
@@ -240,7 +240,7 @@ curl -X GET http://0.0.0.0:8081/ping
 ### Submit an Intent  
 `/submit_intent`
 
-```bash
+```rust
 curl -X POST http://composable_endpoint/submit_intent \
      -H "Content-Type: application/json" \
      -d '{
@@ -267,7 +267,7 @@ curl -X POST http://composable_endpoint/submit_intent \
 
 ### Response:
 **OK:**
-```bash
+```rust
 {
    "code": 1,
    "msg": {
@@ -277,7 +277,7 @@ curl -X POST http://composable_endpoint/submit_intent \
 ```
 
 **ERROR:**
-```bash
+```rust
 {
    "code": 0,
    "msg": msg_error
@@ -287,7 +287,7 @@ curl -X POST http://composable_endpoint/submit_intent \
 ### Prove Funds were Sent from User to Escrow SC:
 `/prove_intent`
 
-```bash
+```rust
 curl -X POST http://composable_endpoint/prove_intent \
      -H "Content-Type: application/json" \
      -d '{
@@ -298,7 +298,7 @@ curl -X POST http://composable_endpoint/prove_intent \
 
 ### Response:
 **OK:**
-```bash
+```rust
 {
    "code": 2,
    "msg": "Intent successfully proved"
@@ -306,7 +306,7 @@ curl -X POST http://composable_endpoint/prove_intent \
 ```
 
 **ERROR:**
-```bash
+```rust
 {
    "code": 0,
    "msg": error_msg 
@@ -321,13 +321,13 @@ curl -X POST http://composable_endpoint/prove_intent \
 
 ### Ping
 `/ping`
-```bash
+```rust
 curl -X GET http://0.0.0.0:8081/ping 
 ```
 
 ### Response:
 **OK:**
-```bash
+```rust
 {
    "msg": "pong"
 }
@@ -336,13 +336,13 @@ curl -X GET http://0.0.0.0:8081/ping
 ### Get ETH gas deposited on the Auctioner address (necessary to solve intents):
 `/get_gas_solver`
 
-```bash
+```rust
 curl -X GET http://composable_endpoint/get_gas_solver?0x61e3d9e355e7cef2d685adf4d917586f9350e298 
 ```
 
 ### Response:
 **OK:**
-```bash
+```rust
 {
    "code": 6,
    "msg": "The address 0x.. has X wei on Auctioner"
@@ -350,7 +350,7 @@ curl -X GET http://composable_endpoint/get_gas_solver?0x61e3d9e355e7cef2d685adf4
 ```
 
 **ERROR:**
-```bash
+```rust
 {
    "code": 0,
    "msg": error_msg 
@@ -362,7 +362,7 @@ curl -X GET http://composable_endpoint/get_gas_solver?0x61e3d9e355e7cef2d685adf4
 `ws://16.171.172.151:443`  🏗️  upgrading to V1
 
 ### Register Solver Addresses (one address per chain)
-```bash
+```rust
 {        
    "code": 1,
    "msg": {
@@ -375,7 +375,7 @@ curl -X GET http://composable_endpoint/get_gas_solver?0x61e3d9e355e7cef2d685adf4
 ```
 ### Response:
 **OK:**
-```bash
+```rust
 {
    "code": 3,
    "msg": "Solver was successfully registered"
@@ -383,7 +383,7 @@ curl -X GET http://composable_endpoint/get_gas_solver?0x61e3d9e355e7cef2d685adf4
 ```
 
 **ERROR:**
-```bash
+```rust
 {
    "code": 0,
    "msg": msg_error
@@ -391,7 +391,7 @@ curl -X GET http://composable_endpoint/get_gas_solver?0x61e3d9e355e7cef2d685adf4
 ```
 
 ### Participate in an Intent Auction:
-```bash
+```rust
 {
    "code": 2,
    "msg": {
@@ -406,7 +406,7 @@ curl -X GET http://composable_endpoint/get_gas_solver?0x61e3d9e355e7cef2d685adf4
 
 ### Response:
 **OK:**
-```bash
+```rust
 {
    "code": 4,
    "msg": msg // "You won this auction!"
@@ -415,7 +415,7 @@ curl -X GET http://composable_endpoint/get_gas_solver?0x61e3d9e355e7cef2d685adf4
 ```
 
 **ERROR:**
-```bash
+```rust
 {
    "code": 0,
    "msg": msg_error
