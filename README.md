@@ -140,7 +140,7 @@ Here’s how it looks in the code:
 
 ```rust
 pub static SOLVER_ADDRESSES: &[&str] = &[
-    "0x...", // ethereum
+    "0x...", // ethereum, MUST be the same the pubkey of ETHEREUM_PKEY on .env!
     "CM...", // solana
 ];
 ```
@@ -149,14 +149,13 @@ pub static SOLVER_ADDRESSES: &[&str] = &[
 The first thing you need to do is fill out the `.env` file. Use the provided `env.example` as a template:
 ```rust
 ETHEREUM_RPC="" # https
-ETHEREUM_PKEY=""
+ETHEREUM_PKEY="" # we use this pkey to be the SOLVER_PRIVATE_KEY, MUST be the private key of ethereum SOLVER_ADDRESSES
 SOLANA_RPC="" # https
 SOLANA_KEYPAIR=""
 BRIDGE_TOKEN="USDT" # USDT
 COMISSION="10" # if COMISSION == "1"-> 0.01%
 SOLVER_ID="" # Given by Composable
 COMPOSABLE_ENDPOINT="" # ws IP address Given by Composable
-SOLVER_PRIVATE_KEY="" # ETH private_key
 ```
 ## Step 2: Provide Gas on Ethereum chain to Auctioner
 The solver must provide some gas on ethereum chain to operate. This gas is needed for the auctioner to perform operations such as declaring the auction winner and updating the highest bid, all on-chain. Note that gas is only required on the destination chain where the user intents to receive the token_out of their intent.
