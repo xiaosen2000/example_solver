@@ -366,7 +366,7 @@ curl -X GET http://composable_endpoint/get_gas_solver?0x61e3d9e355e7cef2d685adf4
 {        
    "code": 1,
    "msg": {
-             "solver_id": SOLVER_ID, // Given by Composable
+             "solver_id": SOLVER_ID,
              "solver_addresses": SOLVER_ADDRESSES, // vec!(solana address, ethereum address, ...)
              "intent_hash": "...", // Keccak256Hash of the intent 
              "signature": "..." // ECDSA signature of the hash
@@ -396,7 +396,7 @@ curl -X GET http://composable_endpoint/get_gas_solver?0x61e3d9e355e7cef2d685adf4
    "code": 2,
    "msg": {
              "intent_id": intent_id, // obtained listening to Intents
-             "solver_id": SOLVER_ID, // Given by Composable
+             "solver_id": SOLVER_ID, 
              "amount": "...", // off-chain solver setup to get the best quote
              "intent_hash": "...", // Keccak256Hash of the intent 
              "signature": "..." // ECDSA signature of the hash      
