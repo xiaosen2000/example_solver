@@ -46,6 +46,11 @@ The Rollup enables MANTIS to operate efficiently while preserving the principles
 
 ---
 
+
+
+
+
+
 # Cross-Chain Domain vs. Single Domain Options
 
 MANTIS V0 empowers users with two flexible transaction options: **Cross-Chain Domain** and **Single Domain**. Both are designed to ensure secure, efficient, and decentralized operations, but each offers unique capabilities.
@@ -91,6 +96,10 @@ In the Single Domain, users submit intents and solvers execute them entirely wit
 
 ### 🛡️ Security & Efficiency:
 Both Single Domain and Cross-Chain Domain options are designed with the highest standards of security and efficiency, ensuring peace of mind for both users and solvers.
+
+
+
+
 
 
 
