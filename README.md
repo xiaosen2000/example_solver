@@ -209,6 +209,8 @@ Object {
         "msg": String("You won this auction!"),
     },
 }
+
+You have win 29.196523 USDT on intent RVcwGSrL
 ```
 
 Inside the `example_solver`, we have two main folders: `routers` and `chains`.
