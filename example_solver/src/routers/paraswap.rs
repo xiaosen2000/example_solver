@@ -44,7 +44,8 @@ pub mod paraswap_router {
                 let (amount_in, amount_out, mode) = if params.side == "SELL".to_string() {
                     (params.amount_in.clone(), BigInt::from(1), "destAmount")
                 } else {
-                    (BigInt::from(1), params.amount_in.clone(), "srcAmount")
+                    let agg_amount = json.get("srcAmount").ok_or("Failed to get destination srcAmount")?.to_string().trim_matches('"').to_string();
+                    (BigInt::from_str(&agg_amount).unwrap() * BigInt::from(2), params.amount_in.clone(), "srcAmount")
                 };
 
                 let dest_amount = json.get(mode).ok_or("Failed to get destination amount")?;

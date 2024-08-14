@@ -20,8 +20,10 @@ lazy_static! {
     // <(src_chain, dst_chain), (src_chain_cost, dst_chain_cost)> // cost in USDT
     pub static ref FLAT_FEES: Arc<RwLock<HashMap<(String, String), (u32, u32)>>> = {
         let mut m = HashMap::new();
-        m.insert(("ethereum".to_string(), "solana".to_string()), (10000000, 10000000));
-        m.insert(("solana".to_string(), "ethereum".to_string()), (40000000, 1000000));
+        m.insert(("ethereum".to_string(), "ethereum".to_string()), (0, 30000000));      // 0$ 30$
+        m.insert(("solana".to_string(), "solana".to_string()), (1000000, 1000000));     // 1$ 1$
+        m.insert(("ethereum".to_string(), "solana".to_string()), (0, 10000000));        // 0$ 1$
+        m.insert(("solana".to_string(), "ethereum".to_string()), (40000000, 1000000));  // 1$ 10$
         Arc::new(RwLock::new(m))
     };
 }
@@ -49,19 +51,13 @@ pub async fn get_simulate_swap_intent(
         OperationOutput::Borrow(_) => todo!(),
     };
 
-    let (bridge_token_address_src, bridge_token_dec_src) =
-        get_token_info(bridge_token, src_chain).unwrap();
+    let (bridge_token_address_src, _) = get_token_info(bridge_token, src_chain).unwrap();
 
     let mut amount_out_src_chain = BigInt::from_str(&amount_in).unwrap();
     if bridge_token_address_src != token_in {
         if src_chain == "ethereum" {
-            amount_out_src_chain = ethereum_simulate_swap(
-                &token_in,
-                &amount_in,
-                bridge_token_address_src,
-                bridge_token_dec_src,
-            )
-            .await;
+            amount_out_src_chain =
+                ethereum_simulate_swap(&token_in, &amount_in, bridge_token_address_src).await;
         } else if src_chain == "solana" {
             amount_out_src_chain = BigInt::from_str(
                 &solana_simulate_swap(
@@ -76,7 +72,11 @@ pub async fn get_simulate_swap_intent(
         }
     }
 
-    let (bridge_token_address_dst, bridge_token_dec_dst) =
+    if amount_out_src_chain < BigInt::from(100000000) {
+        return String::from("0");
+    }
+
+    let (bridge_token_address_dst, _) =
         get_token_info(bridge_token, &intent_info.dst_chain).unwrap();
 
     // get flat fees
@@ -103,16 +103,12 @@ pub async fn get_simulate_swap_intent(
             + (amount_out_src_chain * BigInt::from(comission) / BigInt::from(100_000)));
     let mut final_amount_out = amount_in_dst_chain.to_string();
 
-    if src_chain != dst_chain && bridge_token_address_dst != token_out {
+    if bridge_token_address_dst != token_out {
         if dst_chain == "ethereum" {
-            final_amount_out = ethereum_simulate_swap(
-                &token_out,
-                &amount_in_dst_chain.to_string(),
-                bridge_token_address_dst,
-                bridge_token_dec_dst,
-            )
-            .await
-            .to_string();
+            final_amount_out =
+                ethereum_simulate_swap(bridge_token_address_src, &final_amount_out, &token_out)
+                    .await
+                    .to_string();
         } else if dst_chain == "solana" {
             final_amount_out = solana_simulate_swap(
                 &dst_chain_user,

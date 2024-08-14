@@ -1,5 +1,5 @@
 pub mod ethereum_chain {
-    use crate::chains::OperationInput;
+    use crate::chains::get_token_info;
     use crate::chains::OperationOutput;
     use crate::env;
     use crate::json;
@@ -53,18 +53,51 @@ pub mod ethereum_chain {
         }]"#
     );
 
-    pub async fn ethereum_executing(intent_id: &str, intent: PostIntentInfo) -> String {
+    abigen!(
+        Escrow,
+        r#"[{
+            "constant": false,
+            "inputs": [
+                {
+                    "components": [
+                        { "name": "intentId", "type": "string" },
+                        { "name": "solverOut", "type": "string" },
+                        { "name": "singleDomain", "type": "bool" }
+                    ],
+                    "name": "solverTransferData",
+                    "type": "tuple"
+                }
+            ],
+            "name": "sendFundsToUser",
+            "outputs": [],
+            "payable": true,
+            "stateMutability": "payable",
+            "type": "function"
+        }]"#
+    );
+
+    abigen!(
+        UsdtContract,
+        r#"[
+            function balanceOf(address owner) view returns (uint256)
+        ]"#
+    );
+    
+
+    pub const ESCROW_SC_ETHEREUM: &str = "0x2ed71A143D7CC3281D51d66bb56f47A555b6F840";
+
+    pub async fn ethereum_executing(
+        intent_id: &str,
+        intent: PostIntentInfo,
+        amount: &str,
+    ) -> String {
         let client_rpc = env::var("ETHEREUM_RPC").expect("ETHEREUM_RPC must be set");
         let mut msg = String::default();
-        let mut user_account = String::default();
         let mut token_out = String::default();
-        let mut amount = 0u64;
 
         match intent.function_name.as_str() {
             "transfer" => {
                 if let OperationOutput::SwapTransfer(transfer_output) = &intent.outputs {
-                    user_account = transfer_output.dst_chain_user.clone();
-                    amount = transfer_output.amount_out.parse::<u64>().unwrap();
                     token_out = transfer_output.token_out.clone();
                 }
 
@@ -72,7 +105,7 @@ pub mod ethereum_chain {
                     &client_rpc,
                     &env::var("ETHEREUM_PKEY").expect("ETHEREUM_PKEY must be set"),
                     &token_out,
-                    &user_account,
+                    SOLVER_ADDRESSES.get(0).unwrap(),
                     &amount.to_string(),
                 )
                 .await
@@ -95,29 +128,17 @@ pub mod ethereum_chain {
                 }
             }
             "swap" => {
-                let mut user_account = String::default();
-                let mut token_in = String::default();
+                let (token_in, token0_decimals) = get_token_info("USDT", "ethereum").unwrap();
                 let mut token_out = String::default();
-                let mut amount = 0u64;
 
                 if let OperationOutput::SwapTransfer(transfer_output) = &intent.outputs {
-                    user_account = transfer_output.dst_chain_user.clone();
                     token_out = transfer_output.token_out.clone();
-                    amount = transfer_output.amount_out.parse::<u64>().unwrap();
-                }
-                if let OperationInput::SwapTransfer(transfer_input) = &intent.inputs {
-                    token_in = transfer_input.token_in.clone();
                 }
 
                 let provider =
                     Provider::<Http>::try_from(client_rpc.replace("wss", "https")).unwrap();
                 let provider = Arc::new(provider);
 
-                let token0_decimals = get_evm_token_decimals(&ERC20::new(
-                    Address::from_str(&token_in).unwrap(),
-                    provider.clone(),
-                ))
-                .await;
                 let token1_decimals = get_evm_token_decimals(&ERC20::new(
                     Address::from_str(&token_out).unwrap(),
                     provider.clone(),
@@ -125,15 +146,15 @@ pub mod ethereum_chain {
                 .await;
 
                 let paraswap_params = ParaswapParams {
-                    side: "SELL".to_string(),
+                    side: "BUY".to_string(),
                     chain_id: 1,
-                    amount_in: BigInt::from(amount),
+                    amount_in: BigInt::from_str(amount).unwrap(),
                     token_in: Address::from_str(&token_in).unwrap(),
                     token_out: Address::from_str(&token_out).unwrap(),
                     token0_decimals: token0_decimals as u32,
                     token1_decimals: token1_decimals as u32,
-                    wallet_address: Address::from_str(&SOLVER_ADDRESSES[0]).unwrap(),
-                    receiver_address: Address::from_str(&user_account).unwrap(),
+                    wallet_address: Address::from_str(SOLVER_ADDRESSES.get(0).unwrap()).unwrap(),
+                    receiver_address: Address::from_str(SOLVER_ADDRESSES.get(0).unwrap()).unwrap(),
                     client_aggregator: Client::new(),
                 };
 
@@ -141,6 +162,15 @@ pub mod ethereum_chain {
                     simulate_swap_paraswap(paraswap_params).await.unwrap();
 
                 msg = send_tx(res_to, res_data, 1, 10_000_000, 0, client_rpc).await;
+
+                msg = json!({
+                    "code": 3,
+                    "msg": {
+                        "intent_id": intent_id,
+                        "tx_hash": msg
+                    }
+                })
+                .to_string();
             }
             _ => {
                 println!("function not supported")
@@ -168,7 +198,7 @@ pub mod ethereum_chain {
         let erc20 = ERC20::new(token_address, wallet.clone());
 
         let recipient: Address = recipient_address.parse()?;
-        let amount = U256::from_str(amount).unwrap();
+        let amount = U256::from_dec_str(amount).unwrap();
 
         let tx = erc20.transfer(recipient, amount);
         let tx = tx.send().await?;
@@ -182,14 +212,14 @@ pub mod ethereum_chain {
         chain_id: u64,
         gas: u64,
         value: u128,
-        mut url: String,
+        url: String,
     ) -> String {
         let prvk = secp256k1::SecretKey::from_str(
             &env::var("ETHEREUM_PKEY").unwrap_or_else(|_| "".to_string()),
         )
         .unwrap();
 
-        // Get gas shit
+        // Get gas
         let response =
             reqwest::get("https://api.etherscan.io/api?module=gastracker&action=gasoracle")
                 .await
@@ -197,29 +227,31 @@ pub mod ethereum_chain {
                 .json::<GasResponse>()
                 .await
                 .unwrap();
-        // let safe_gas_price: u64 = response.result.safe_gas_price.parse().unwrap();
-        let propose_gas_price: u64 = response.result.propose_gas_price.parse().unwrap();
-        // let fast_gas_price: u64 = response.result.fast_gas_price.parse().unwrap();
-        let propose_gas_price_wei = propose_gas_price * 1_000_000_000;
+
+        // Parse the propose gas price as f64
+        let propose_gas_price_f64: f64 = response.result.propose_gas_price.parse().unwrap();
+
+        // Convert to wei (1 Gwei = 1e9 wei)
+        let propose_gas_price_wei: u128 = (propose_gas_price_f64 * 1e9) as u128;
+
         let base_fee_per_gas = propose_gas_price_wei;
-        let priority_fee_per_gas = 2_000_000_000;
+        let priority_fee_per_gas: u128 = 2_000_000_000; // This is already in wei
         let max_fee_per_gas = base_fee_per_gas + priority_fee_per_gas;
 
         // EIP-1559
         let tx_object = web3::types::TransactionParameters {
             to: Some(to),
-            gas: web3::types::U256::from(gas),
-            value: web3::types::U256::from(value),
+            gas: U256::from(gas),
+            value: U256::from(value),
             data: web3::types::Bytes::from(hex::decode(data[2..].to_string()).unwrap()),
             chain_id: Some(chain_id),
             transaction_type: Some(web3::types::U64::from(2)),
             access_list: None,
-            max_fee_per_gas: Some(web3::types::U256::from(max_fee_per_gas)),
-            max_priority_fee_per_gas: Some(web3::types::U256::from(priority_fee_per_gas)),
+            max_fee_per_gas: Some(U256::from(max_fee_per_gas)),
+            max_priority_fee_per_gas: Some(U256::from(priority_fee_per_gas)),
             ..Default::default()
         };
 
-        url = url.replace("wss://", "https://");
         let web3_query = web3::Web3::new(web3::transports::Http::new(&url).unwrap());
         let signed = web3_query
             .accounts()
@@ -249,27 +281,27 @@ pub mod ethereum_chain {
     pub async fn ethereum_simulate_swap(
         token_in: &str,
         amount_in: &str,
-        bridge_token_address_src: &str,
-        bridge_token_dec_src: u32,
+        token_out: &str,
     ) -> BigInt {
-        let provider = Provider::<Http>::try_from(
-            env::var("ETHEREUM_RPC")
-                .expect("ETHEREUM_RPC must be set")
-                .replace("wss", "https"),
-        )
-        .unwrap();
+        let rpc_url = env::var("ETHEREUM_RPC").expect("ETHEREUM_RPC must be set");
+        let provider = Provider::<Http>::try_from(rpc_url)
+            .map_err(|e| e.to_string())
+            .unwrap();
         let provider = Arc::new(provider);
-        let token_in = Address::from_str(&format!("0x{}", token_in)).unwrap();
+        let token_in = Address::from_str(token_in).unwrap();
+        let token_out = Address::from_str(token_out).unwrap();
         let token0_decimals = get_evm_token_decimals(&ERC20::new(token_in, provider.clone())).await;
+        let token1_decimals =
+            get_evm_token_decimals(&ERC20::new(token_out, provider.clone())).await;
 
         let paraswap_params = ParaswapParams {
             side: "SELL".to_string(),
             chain_id: 1,
             amount_in: BigInt::from_str(amount_in).unwrap(),
             token_in: token_in,
-            token_out: Address::from_str(&format!("0x{}", bridge_token_address_src)).unwrap(),
+            token_out: token_out,
             token0_decimals: token0_decimals as u32,
-            token1_decimals: bridge_token_dec_src,
+            token1_decimals: token1_decimals as u32,
             wallet_address: Address::from_str("0x61e3D9E355E7CeF2D685aDF4d917586f9350e298")
                 .unwrap(),
             receiver_address: Address::from_str("0x61e3D9E355E7CeF2D685aDF4d917586f9350e298")
@@ -279,5 +311,38 @@ pub mod ethereum_chain {
 
         let (_res_amount, _, _) = simulate_swap_paraswap(paraswap_params).await.unwrap();
         _res_amount
+    }
+
+    pub async fn ethereum_send_funds_to_user(
+        provider_url: &str,
+        private_key: &str,
+        contract_address: &str,
+        intent_id: &str,
+        solver_out: &str,
+        single_domain: bool,
+        value_in_wei: U256,
+    ) -> Result<TransactionReceipt, Box<dyn std::error::Error>> {
+        let provider = Provider::<Http>::try_from(provider_url)?;
+        let provider = Arc::new(provider);
+
+        let wallet: LocalWallet = private_key.parse()?;
+        let wallet = wallet.with_chain_id(1u64); // Mainnet
+        let wallet = Arc::new(SignerMiddleware::new(provider.clone(), wallet));
+
+        let contract_address = contract_address.parse::<Address>()?;
+        let contract = Escrow::new(contract_address, wallet.clone());
+
+        let solver_transfer_data = (intent_id.to_string(), solver_out.to_string(), single_domain);
+
+        let contract = contract
+            .send_funds_to_user(solver_transfer_data)
+            .value(value_in_wei);
+        let pending_tx = contract.send().await?;
+
+        let tx_receipt = pending_tx
+            .await?
+            .expect("Failed to fetch transaction receipt");
+
+        Ok(tx_receipt)
     }
 }

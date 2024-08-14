@@ -36,7 +36,11 @@ pub mod solana_chain {
         params: Vec<String>,
     }
 
-    pub async fn solana_executing(intent_id: &str, intent: PostIntentInfo) -> String {
+    pub async fn solana_executing(
+        intent_id: &str,
+        intent: PostIntentInfo,
+        _amount: &str,
+    ) -> String {
         let mut msg = String::default();
         let rpc_url = env::var("SOLANA_RPC").expect("SOLANA_RPC must be set");
         let from_keypair = Keypair::from_base58_string(
@@ -259,5 +263,14 @@ pub mod solana_chain {
         .unwrap();
 
         BigInt::from(quotes.out_amount).to_string()
+    }
+
+    pub async fn solana_send_funds_to_user(
+        token_mint: &str,
+        amount: &str,
+        solver_out: &str,
+        single_domain: bool,
+    ) {
+        // call send_funds_to_user on https://github.com/ComposableFi/emulated-light-client/blob/fast-bridge/solana/bridge-escrow/programs/bridge-escrow/src/lib.rs
     }
 }

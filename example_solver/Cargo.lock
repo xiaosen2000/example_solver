@@ -1985,6 +1985,40 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0206175f82b8d6bf6652ff7d71a1e27fd2e4efde587fd368662814d6ec1d9ce0"
 
 [[package]]
+name = "example_solver"
+version = "0.1.0"
+dependencies = [
+ "base64 0.22.1",
+ "bincode",
+ "bs58 0.5.1",
+ "chrono",
+ "dotenv",
+ "ethers",
+ "futures",
+ "hex",
+ "hex-literal",
+ "lazy_static",
+ "log",
+ "num-bigint 0.4.5",
+ "num-traits",
+ "rand 0.8.5",
+ "reqwest 0.12.4",
+ "secp256k1",
+ "serde",
+ "serde_json",
+ "solana-client",
+ "solana-sdk",
+ "spl-associated-token-account 3.0.2",
+ "spl-token 3.5.0",
+ "strum",
+ "strum_macros",
+ "thiserror",
+ "tokio",
+ "tokio-tungstenite 0.23.0",
+ "web3",
+]
+
+[[package]]
 name = "eyre"
 version = "0.6.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5632,40 +5666,6 @@ dependencies = [
  "phf",
  "thiserror",
  "unicode-xid",
-]
-
-[[package]]
-name = "solver_fast"
-version = "0.1.0"
-dependencies = [
- "base64 0.22.1",
- "bincode",
- "bs58 0.5.1",
- "chrono",
- "dotenv",
- "ethers",
- "futures",
- "hex",
- "hex-literal",
- "lazy_static",
- "log",
- "num-bigint 0.4.5",
- "num-traits",
- "rand 0.8.5",
- "reqwest 0.12.4",
- "secp256k1",
- "serde",
- "serde_json",
- "solana-client",
- "solana-sdk",
- "spl-associated-token-account 3.0.2",
- "spl-token 3.5.0",
- "strum",
- "strum_macros",
- "thiserror",
- "tokio",
- "tokio-tungstenite 0.23.0",
- "web3",
 ]
 
 [[package]]

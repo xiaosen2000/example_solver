@@ -5,11 +5,10 @@ use lazy_static::lazy_static;
 use std::collections::HashMap;
 
 use crate::env;
-use chrono::Utc;
 use ethers::prelude::*;
 use ethers::signers::LocalWallet;
+use ethers::utils::hash_message;
 use ethers::utils::keccak256;
-use hex::encode;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::error::Error;
@@ -19,9 +18,6 @@ use strum_macros::EnumString;
 use tokio::sync::RwLock;
 
 lazy_static! {
-    pub static ref START_TIME: Arc<RwLock<Option<chrono::DateTime<Utc>>>> =
-        Arc::new(RwLock::new(None));
-
     // <intent_id, PostIntentInfo>
     pub static ref INTENTS: Arc<RwLock<HashMap<String, PostIntentInfo>>> = {
         let m = HashMap::new();
@@ -98,7 +94,6 @@ enum Blockchain {
 #[strum(serialize_all = "UPPERCASE")]
 enum Token {
     USDT,
-    PICA,
 }
 
 #[derive(Debug)]
@@ -117,26 +112,27 @@ lazy_static! {
         let mut m = HashMap::new();
 
         let mut usdt_addresses = HashMap::new();
-        usdt_addresses.insert(Blockchain::Ethereum, "dAC17F958D2ee523a2206206994597C13D831ec7");
-        usdt_addresses.insert(Blockchain::Solana, "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB");
-        m.insert(Token::USDT, TokenInfo {
-            address: usdt_addresses,
-            decimals: 6,
-        });
-
-        // let mut pica_addresses = HashMap::new();
-        // pica_addresses.insert(Blockchain::Ethereum, "0x..");
-        // pica_addresses.insert(Blockchain::Solana, "C7..");
-        // m.insert(Token::PICA, TokenInfo {
-        //     address: pica_addresses,
-        //     decimals: 18,
-        // });
+        usdt_addresses.insert(
+            Blockchain::Ethereum,
+            "dAC17F958D2ee523a2206206994597C13D831ec7",
+        );
+        usdt_addresses.insert(
+            Blockchain::Solana,
+            "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
+        );
+        m.insert(
+            Token::USDT,
+            TokenInfo {
+                address: usdt_addresses,
+                decimals: 6,
+            },
+        );
 
         m
     };
-
     pub static ref SOLVER_ID: String = env::var("SOLVER_ID").unwrap_or_else(|_| String::from(""));
-    pub static ref SOLVER_PRIVATE_KEY: String = env::var("SOLVER_PRIVATE_KEY").unwrap_or_else(|_| String::from(""));
+    pub static ref SOLVER_PRIVATE_KEY: String =
+        env::var("ETHEREUM_PKEY").unwrap_or_else(|_| String::from(""));
 }
 
 pub fn get_token_info(token: &str, blockchain: &str) -> Option<(&'static str, u32)> {
@@ -155,11 +151,12 @@ pub async fn create_keccak256_signature(
     let json_bytes = json_str.as_bytes();
 
     let hash = keccak256(json_bytes);
-    let hash_hex = encode(hash);
+    let hash_hex = hex::encode(hash);
 
     let wallet: LocalWallet = private_key.parse().unwrap();
+    let eth_message_hash = hash_message(hash);
 
-    let signature: Signature = wallet.sign_hash(H256::from(hash)).unwrap();
+    let signature: Signature = wallet.sign_hash(H256::from(eth_message_hash)).unwrap();
     let signature_hex = signature.to_string();
 
     if let Some(msg) = json_data.get_mut("msg") {
