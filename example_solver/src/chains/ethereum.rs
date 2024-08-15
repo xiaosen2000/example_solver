@@ -61,8 +61,7 @@ pub mod ethereum_chain {
                 {
                     "components": [
                         { "name": "intentId", "type": "string" },
-                        { "name": "solverOut", "type": "string" },
-                        { "name": "singleDomain", "type": "bool" }
+                        { "name": "solverOut", "type": "string" }
                     ],
                     "name": "solverTransferData",
                     "type": "tuple"
@@ -82,7 +81,6 @@ pub mod ethereum_chain {
             function balanceOf(address owner) view returns (uint256)
         ]"#
     );
-    
 
     pub const ESCROW_SC_ETHEREUM: &str = "0x2ed71A143D7CC3281D51d66bb56f47A555b6F840";
 
@@ -319,7 +317,6 @@ pub mod ethereum_chain {
         contract_address: &str,
         intent_id: &str,
         solver_out: &str,
-        single_domain: bool,
         value_in_wei: U256,
     ) -> Result<TransactionReceipt, Box<dyn std::error::Error>> {
         let provider = Provider::<Http>::try_from(provider_url)?;
@@ -332,7 +329,7 @@ pub mod ethereum_chain {
         let contract_address = contract_address.parse::<Address>()?;
         let contract = Escrow::new(contract_address, wallet.clone());
 
-        let solver_transfer_data = (intent_id.to_string(), solver_out.to_string(), single_domain);
+        let solver_transfer_data = (intent_id.to_string(), solver_out.to_string());
 
         let contract = contract
             .send_funds_to_user(solver_transfer_data)

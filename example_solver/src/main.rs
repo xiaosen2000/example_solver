@@ -3,11 +3,14 @@ mod routers;
 
 use crate::chains::ethereum::ethereum_chain::ethereum_executing;
 use crate::chains::ethereum::ethereum_chain::ethereum_send_funds_to_user;
-use crate::chains::solana::solana_chain::solana_executing;
 use crate::chains::ethereum::ethereum_chain::get_evm_token_decimals;
-use crate::routers::paraswap::paraswap_router::simulate_swap_paraswap;
 use crate::chains::ethereum::ethereum_chain::send_tx;
 use crate::chains::ethereum::ethereum_chain::UsdtContract;
+use crate::chains::ethereum::ethereum_chain::ERC20;
+use crate::chains::ethereum::ethereum_chain::ESCROW_SC_ETHEREUM;
+use crate::chains::get_token_info;
+use crate::chains::solana::solana_chain::solana_executing;
+use crate::chains::OperationInput;
 use crate::chains::OperationOutput;
 use crate::chains::PostIntentInfo;
 use crate::chains::INTENTS;
@@ -15,25 +18,22 @@ use crate::chains::SOLVER_ADDRESSES;
 use crate::chains::SOLVER_ID;
 use crate::chains::SOLVER_PRIVATE_KEY;
 use crate::routers::get_simulate_swap_intent;
+use crate::routers::paraswap::paraswap_router::simulate_swap_paraswap;
+use crate::routers::paraswap::paraswap_router::ParaswapParams;
 use chains::create_keccak256_signature;
+use ethers::providers::{Http, Provider};
+use ethers::types::Address;
 use ethers::types::U256;
 use futures::{SinkExt, StreamExt};
+use num_bigint::BigInt;
 use reqwest::Client;
 use serde_json::json;
 use serde_json::Value;
 use std::env;
+use std::str::FromStr;
+use std::sync::Arc;
 use tokio_tungstenite::connect_async;
 use tokio_tungstenite::tungstenite::protocol::Message;
-use crate::chains::ethereum::ethereum_chain::ESCROW_SC_ETHEREUM;
-use crate::chains::get_token_info;
-use crate::chains::OperationInput;
-use ethers::providers::{Http, Provider};
-use std::sync::Arc;
-use crate::chains::ethereum::ethereum_chain::ERC20;
-use ethers::types::Address;
-use std::str::FromStr;
-use crate::routers::paraswap::paraswap_router::ParaswapParams;
-use num_bigint::BigInt;
 
 #[tokio::main]
 async fn main() {
@@ -179,38 +179,60 @@ async fn main() {
                             if intent.dst_chain == "solana" {
                                 _ = solana_executing(intent_id, intent, amount).await;
                             } else if intent.dst_chain == "ethereum" {
-                                let rpc_url = env::var("ETHEREUM_RPC").expect("ETHEREUM_RPC must be set");
-                                let private_key = env::var("ETHEREUM_PKEY").expect("ETHEREUM_PKEY must be set");
-                                let usdt_contract_address: Address = "0xdac17f958d2ee523a2206206994597c13d831ec7".parse().unwrap();
-                                let target_address: Address = Address::from_str(SOLVER_ADDRESSES.get(0).unwrap()).unwrap();
+                                let rpc_url =
+                                    env::var("ETHEREUM_RPC").expect("ETHEREUM_RPC must be set");
+                                let private_key =
+                                    env::var("ETHEREUM_PKEY").expect("ETHEREUM_PKEY must be set");
+                                let usdt_contract_address: Address =
+                                    "0xdac17f958d2ee523a2206206994597c13d831ec7"
+                                        .parse()
+                                        .unwrap();
+                                let target_address: Address =
+                                    Address::from_str(SOLVER_ADDRESSES.get(0).unwrap()).unwrap();
                                 let provider = Provider::<Http>::try_from(&rpc_url).unwrap();
                                 let provider = Arc::new(provider);
-                                let usdt_contract = UsdtContract::new(usdt_contract_address, provider.clone());
-                    
-                                let balance_ant: U256 = usdt_contract.balance_of(target_address).call().await.unwrap();
+                                let usdt_contract =
+                                    UsdtContract::new(usdt_contract_address, provider.clone());
+
+                                let balance_ant: U256 = usdt_contract
+                                    .balance_of(target_address)
+                                    .call()
+                                    .await
+                                    .unwrap();
 
                                 // swap USDT -> token_out
                                 _ = ethereum_executing(intent_id, intent.clone(), amount).await;
-                            
+
                                 // send token_out -> user & user sends token_in -> solver
-                                let _ = ethereum_send_funds_to_user(&rpc_url, &private_key, ESCROW_SC_ETHEREUM, intent_id, SOLVER_ADDRESSES.get(0).unwrap(), true, U256::zero()).await.unwrap();
-                                
+                                let _ = ethereum_send_funds_to_user(
+                                    &rpc_url,
+                                    &private_key,
+                                    ESCROW_SC_ETHEREUM,
+                                    intent_id,
+                                    SOLVER_ADDRESSES.get(0).unwrap(),
+                                    U256::zero(),
+                                )
+                                .await
+                                .unwrap();
+
                                 // swap token_in -> USDT
-                                let (token_out, token1_decimals) = get_token_info("USDT", "ethereum").unwrap();
+                                let (token_out, token1_decimals) =
+                                    get_token_info("USDT", "ethereum").unwrap();
                                 let mut token_in = String::default();
                                 let mut amount_in = String::default();
-                
-                                if let OperationInput::SwapTransfer(transfer_input) = &intent.inputs {
+
+                                if let OperationInput::SwapTransfer(transfer_input) = &intent.inputs
+                                {
                                     token_in = transfer_input.token_in.clone();
                                     amount_in = transfer_input.amount_in.clone();
                                 }
-                
+
                                 let token0_decimals = get_evm_token_decimals(&ERC20::new(
                                     Address::from_str(&token_in).unwrap(),
                                     provider.clone(),
                                 ))
                                 .await;
-                
+
                                 let paraswap_params = ParaswapParams {
                                     side: "SELL".to_string(),
                                     chain_id: 1,
@@ -219,25 +241,40 @@ async fn main() {
                                     token_out: Address::from_str(&token_out).unwrap(),
                                     token0_decimals: token0_decimals as u32,
                                     token1_decimals: token1_decimals as u32,
-                                    wallet_address: Address::from_str(SOLVER_ADDRESSES.get(0).unwrap()).unwrap(),
-                                    receiver_address: Address::from_str(SOLVER_ADDRESSES.get(0).unwrap()).unwrap(),
+                                    wallet_address: Address::from_str(
+                                        SOLVER_ADDRESSES.get(0).unwrap(),
+                                    )
+                                    .unwrap(),
+                                    receiver_address: Address::from_str(
+                                        SOLVER_ADDRESSES.get(0).unwrap(),
+                                    )
+                                    .unwrap(),
                                     client_aggregator: Client::new(),
                                 };
-                
+
                                 let (_res_amount, res_data, res_to) =
                                     simulate_swap_paraswap(paraswap_params).await.unwrap();
-                
+
                                 _ = send_tx(res_to, res_data, 1, 10_000_000, 0, rpc_url).await;
 
-                                let balance_post: U256 = usdt_contract.balance_of(target_address).call().await.unwrap();
+                                let balance_post: U256 = usdt_contract
+                                    .balance_of(target_address)
+                                    .call()
+                                    .await
+                                    .unwrap();
                                 let balance;
                                 if balance_post >= balance_ant {
                                     balance = balance_post - balance_ant;
-                                    println!("You have win {} USDT on intent {intent_id}", balance.as_u128() as f64 / 1e6);
-                                }
-                                else {
+                                    println!(
+                                        "You have win {} USDT on intent {intent_id}",
+                                        balance.as_u128() as f64 / 1e6
+                                    );
+                                } else {
                                     balance = balance_ant - balance_post;
-                                    println!("You have lost {} USDT on intent {intent_id}", balance.as_u128() as f64 / 1e6);
+                                    println!(
+                                        "You have lost {} USDT on intent {intent_id}",
+                                        balance.as_u128() as f64 / 1e6
+                                    );
                                 }
                             }
 
