@@ -266,6 +266,7 @@ pub mod solana_chain {
     }
 
     pub async fn solana_send_funds_to_user(
+        intent_id: &str,
         token_mint: &str,
         amount: &str,
         solver_out: &str,
