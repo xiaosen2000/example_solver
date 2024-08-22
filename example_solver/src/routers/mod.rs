@@ -21,7 +21,7 @@ lazy_static! {
     pub static ref FLAT_FEES: Arc<RwLock<HashMap<(String, String), (u32, u32)>>> = {
         let mut m = HashMap::new();
         m.insert(("ethereum".to_string(), "ethereum".to_string()), (0, 30000000));      // 0$ 30$
-        m.insert(("solana".to_string(), "solana".to_string()), (1000000, 1000000));     // 1$ 1$
+        m.insert(("solana".to_string(), "solana".to_string()), (1, 1));                 // 1$ 1$
         m.insert(("ethereum".to_string(), "solana".to_string()), (0, 10000000));        // 0$ 1$
         m.insert(("solana".to_string(), "ethereum".to_string()), (40000000, 1000000));  // 1$ 10$
         Arc::new(RwLock::new(m))
@@ -62,9 +62,9 @@ pub async fn get_simulate_swap_intent(
             amount_out_src_chain = BigInt::from_str(
                 &solana_simulate_swap(
                     &dst_chain_user,
-                    bridge_token_address_src,
                     &token_in,
-                    amount_out_src_chain.to_u64().unwrap(),
+                    &bridge_token_address_src,
+                    BigInt::from_str(&amount_in).unwrap().to_u64().unwrap(),
                 )
                 .await,
             )
@@ -72,12 +72,7 @@ pub async fn get_simulate_swap_intent(
         }
     }
 
-    if amount_out_src_chain < BigInt::from(100000000) {
-        return String::from("0");
-    }
-
-    let (bridge_token_address_dst, _) =
-        get_token_info(bridge_token, &intent_info.dst_chain).unwrap();
+    let (bridge_token_address_dst, _) = get_token_info(bridge_token, dst_chain).unwrap();
 
     // get flat fees
     let flat_fees;
@@ -95,6 +90,10 @@ pub async fn get_simulate_swap_intent(
         .expect("COMISSION must be set")
         .parse::<u32>()
         .unwrap();
+
+    if amount_out_src_chain < BigInt::from(flat_fees.0 + flat_fees.1 + comission) {
+        return String::from("0");
+    }
 
     // we substract the flat fees and the solver comission in USD
     let amount_in_dst_chain = amount_out_src_chain.clone()

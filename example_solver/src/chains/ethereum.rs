@@ -50,6 +50,16 @@ pub mod ethereum_chain {
             "name": "transfer",
             "outputs": [{ "name": "", "type": "bool" }],
             "type": "function"
+        },
+        {
+            "constant": false,
+            "inputs": [
+                { "name": "_spender", "type": "address" },
+                { "name": "_value", "type": "uint256" }
+            ],
+            "name": "approve",
+            "outputs": [{ "name": "", "type": "bool" }],
+            "type": "function"
         }]"#
     );
 
@@ -82,15 +92,16 @@ pub mod ethereum_chain {
         ]"#
     );
 
-    pub const ESCROW_SC_ETHEREUM: &str = "0x2ed71A143D7CC3281D51d66bb56f47A555b6F840";
+    pub const ESCROW_SC_ETHEREUM: &str = "0x3a2C9A923FA1adbcC5Dc6B3eC3297dEeE5479b6f";
+    pub const PARASWAP: &str = "0x216b4b4ba9f3e719726886d34a177484278bfcae";
 
     pub async fn ethereum_executing(
         intent_id: &str,
         intent: PostIntentInfo,
         amount: &str,
-    ) -> String {
-        let client_rpc = env::var("ETHEREUM_RPC").expect("ETHEREUM_RPC must be set");
-        let mut msg = String::default();
+    ) -> Result<(), String> {
+        let client_rpc =
+            env::var("ETHEREUM_RPC").map_err(|e| format!("ETHEREUM_RPC must be set: {}", e))?;
         let mut token_out = String::default();
 
         match intent.function_name.as_str() {
@@ -99,46 +110,55 @@ pub mod ethereum_chain {
                     token_out = transfer_output.token_out.clone();
                 }
 
-                msg = match transfer_erc20(
+                match transfer_erc20(
                     &client_rpc,
-                    &env::var("ETHEREUM_PKEY").expect("ETHEREUM_PKEY must be set"),
+                    &env::var("ETHEREUM_PKEY")
+                        .map_err(|e| format!("ETHEREUM_PKEY must be set: {}", e))?,
                     &token_out,
                     SOLVER_ADDRESSES.get(0).unwrap(),
                     &amount.to_string(),
                 )
                 .await
                 {
-                    Ok(signature) => json!({
-                        "code": 1,
-                        "msg": {
-                            "intent_id": intent_id,
-                            "solver_id": SOLVER_ID.to_string(),
-                            "tx_hash": signature,
-                        }
-                    })
-                    .to_string(),
-                    Err(err) => json!({
-                        "code": 0,
-                        "solver_id": 0,
-                        "msg": format!("Transaction failed: {}", err)
-                    })
-                    .to_string(),
+                    Ok(signature) => {
+                        let msg = json!({
+                            "code": 1,
+                            "msg": {
+                                "intent_id": intent_id,
+                                "solver_id": SOLVER_ID.to_string(),
+                                "tx_hash": signature,
+                            }
+                        })
+                        .to_string();
+                        println!("{}", msg);
+                        Ok(())
+                    }
+                    Err(err) => {
+                        let msg = json!({
+                            "code": 0,
+                            "solver_id": 0,
+                            "msg": format!("Transaction failed: {}", err)
+                        })
+                        .to_string();
+                        Err(msg)
+                    }
                 }
             }
             "swap" => {
-                let (token_in, token0_decimals) = get_token_info("USDT", "ethereum").unwrap();
-                let mut token_out = String::default();
+                let (token_in, token0_decimals) = get_token_info("USDT", "ethereum")
+                    .ok_or_else(|| "Failed to get token info".to_string())?;
 
                 if let OperationOutput::SwapTransfer(transfer_output) = &intent.outputs {
                     token_out = transfer_output.token_out.clone();
                 }
 
-                let provider =
-                    Provider::<Http>::try_from(client_rpc.replace("wss", "https")).unwrap();
+                let provider = Provider::<Http>::try_from(client_rpc.replace("wss", "https"))
+                    .map_err(|e| format!("Failed to create provider: {}", e))?;
                 let provider = Arc::new(provider);
 
                 let token1_decimals = get_evm_token_decimals(&ERC20::new(
-                    Address::from_str(&token_out).unwrap(),
+                    Address::from_str(&token_out)
+                        .map_err(|e| format!("Invalid token_out address: {}", e))?,
                     provider.clone(),
                 ))
                 .await;
@@ -146,36 +166,36 @@ pub mod ethereum_chain {
                 let paraswap_params = ParaswapParams {
                     side: "BUY".to_string(),
                     chain_id: 1,
-                    amount_in: BigInt::from_str(amount).unwrap(),
-                    token_in: Address::from_str(&token_in).unwrap(),
-                    token_out: Address::from_str(&token_out).unwrap(),
+                    amount_in: BigInt::from_str(amount)
+                        .map_err(|e| format!("Invalid amount: {}", e))?,
+                    token_in: Address::from_str(&token_in)
+                        .map_err(|e| format!("Invalid token_in address: {}", e))?,
+                    token_out: Address::from_str(&token_out)
+                        .map_err(|e| format!("Invalid token_out address: {}", e))?,
                     token0_decimals: token0_decimals as u32,
                     token1_decimals: token1_decimals as u32,
-                    wallet_address: Address::from_str(SOLVER_ADDRESSES.get(0).unwrap()).unwrap(),
-                    receiver_address: Address::from_str(SOLVER_ADDRESSES.get(0).unwrap()).unwrap(),
+                    wallet_address: Address::from_str(SOLVER_ADDRESSES.get(0).unwrap())
+                        .map_err(|e| format!("Invalid wallet address: {}", e))?,
+                    receiver_address: Address::from_str(SOLVER_ADDRESSES.get(0).unwrap())
+                        .map_err(|e| format!("Invalid receiver address: {}", e))?,
                     client_aggregator: Client::new(),
                 };
 
-                let (_res_amount, res_data, res_to) =
-                    simulate_swap_paraswap(paraswap_params).await.unwrap();
+                let (_res_amount, res_data, res_to) = simulate_swap_paraswap(paraswap_params)
+                    .await
+                    .map_err(|e| format!("Failed to simulate swap: {}", e))?;
 
-                msg = send_tx(res_to, res_data, 1, 10_000_000, 0, client_rpc).await;
+                let tx_hash = send_tx(res_to, res_data, 1, 10_000_000, 0, client_rpc).await;
 
-                msg = json!({
-                    "code": 3,
-                    "msg": {
-                        "intent_id": intent_id,
-                        "tx_hash": msg
-                    }
-                })
-                .to_string();
+                // since tx_hash is a String, handle error separately if needed
+                if tx_hash.is_err() {
+                    return Err("Transaction failed with an empty hash".to_string());
+                }
+
+                Ok(())
             }
-            _ => {
-                println!("function not supported")
-            }
+            _ => Err("Function not supported".to_string()),
         }
-
-        msg
     }
 
     async fn transfer_erc20(
@@ -211,23 +231,32 @@ pub mod ethereum_chain {
         gas: u64,
         value: u128,
         url: String,
-    ) -> String {
-        let prvk = secp256k1::SecretKey::from_str(
-            &env::var("ETHEREUM_PKEY").unwrap_or_else(|_| "".to_string()),
-        )
-        .unwrap();
+    ) -> Result<(), String> {
+        let prvk = match env::var("ETHEREUM_PKEY") {
+            Ok(key) => match secp256k1::SecretKey::from_str(&key) {
+                Ok(prvk) => prvk,
+                Err(e) => return Err(format!("Failed to parse private key: {}", e)),
+            },
+            Err(_) => return Err("ETHEREUM_PKEY environment variable is not set".to_string()),
+        };
 
         // Get gas
         let response =
             reqwest::get("https://api.etherscan.io/api?module=gastracker&action=gasoracle")
                 .await
-                .unwrap()
-                .json::<GasResponse>()
-                .await
-                .unwrap();
+                .map_err(|e| format!("Failed to fetch gas price: {}", e))?;
+
+        let gas_response: GasResponse = response
+            .json::<GasResponse>()
+            .await
+            .map_err(|e| format!("Failed to parse gas response: {}", e))?;
 
         // Parse the propose gas price as f64
-        let propose_gas_price_f64: f64 = response.result.propose_gas_price.parse().unwrap();
+        let propose_gas_price_f64: f64 = gas_response
+            .result
+            .propose_gas_price
+            .parse()
+            .map_err(|e| format!("Failed to parse gas price: {}", e))?;
 
         // Convert to wei (1 Gwei = 1e9 wei)
         let propose_gas_price_wei: u128 = (propose_gas_price_f64 * 1e9) as u128;
@@ -236,12 +265,14 @@ pub mod ethereum_chain {
         let priority_fee_per_gas: u128 = 2_000_000_000; // This is already in wei
         let max_fee_per_gas = base_fee_per_gas + priority_fee_per_gas;
 
-        // EIP-1559
+        // EIP-1559 transaction
         let tx_object = web3::types::TransactionParameters {
             to: Some(to),
             gas: U256::from(gas),
             value: U256::from(value),
-            data: web3::types::Bytes::from(hex::decode(data[2..].to_string()).unwrap()),
+            data: web3::types::Bytes::from(
+                hex::decode(&data[2..]).map_err(|e| format!("Failed to decode data: {}", e))?,
+            ),
             chain_id: Some(chain_id),
             transaction_type: Some(web3::types::U64::from(2)),
             access_list: None,
@@ -250,20 +281,25 @@ pub mod ethereum_chain {
             ..Default::default()
         };
 
-        let web3_query = web3::Web3::new(web3::transports::Http::new(&url).unwrap());
+        let web3_query = web3::Web3::new(
+            web3::transports::Http::new(&url)
+                .map_err(|e| format!("Failed to create HTTP transport: {}", e))?,
+        );
+
         let signed = web3_query
             .accounts()
             .sign_transaction(tx_object, &prvk)
             .await
-            .unwrap();
+            .map_err(|e| format!("Failed to sign transaction: {}", e))?;
 
-        let _tx_hash = web3_query
+        let tx_hash = web3_query
             .eth()
             .send_raw_transaction(signed.raw_transaction)
             .await
-            .unwrap();
+            .map_err(|e| format!("Failed to send transaction: {}", e))?;
 
-        _tx_hash.to_string()
+        println!("Transaction hash: {:?}", tx_hash);
+        Ok(())
     }
 
     pub async fn get_evm_token_decimals(erc20: &ERC20<Provider<Http>>) -> u8 {
@@ -300,10 +336,8 @@ pub mod ethereum_chain {
             token_out: token_out,
             token0_decimals: token0_decimals as u32,
             token1_decimals: token1_decimals as u32,
-            wallet_address: Address::from_str("0x61e3D9E355E7CeF2D685aDF4d917586f9350e298")
-                .unwrap(),
-            receiver_address: Address::from_str("0x61e3D9E355E7CeF2D685aDF4d917586f9350e298")
-                .unwrap(),
+            wallet_address: Address::from_str(SOLVER_ADDRESSES.get(0).unwrap()).unwrap(),
+            receiver_address: Address::from_str(SOLVER_ADDRESSES.get(0).unwrap()).unwrap(),
             client_aggregator: Client::new(),
         };
 
@@ -342,4 +376,38 @@ pub mod ethereum_chain {
 
         Ok(tx_receipt)
     }
+
+    pub async fn approve_erc20(
+        provider_url: &str,
+        private_key: &str,
+        token_address: &str,
+        spender_address: &str,
+        amount: &str,
+    ) -> Result<(), String> {
+        let provider = Provider::<Http>::try_from(provider_url)
+            .map_err(|e| format!("Failed to create provider: {}", e))?;
+        let provider = Arc::new(provider);
+    
+        let wallet: LocalWallet = private_key.parse()
+            .map_err(|e| format!("Failed to parse private key: {}", e))?;
+        let wallet = wallet.with_chain_id(1u64); // Mainnet
+        let wallet = Arc::new(SignerMiddleware::new(provider.clone(), wallet));
+    
+        let token_address = token_address.parse::<Address>()
+            .map_err(|e| format!("Failed to parse token address: {}", e))?;
+        let erc20 = ERC20::new(token_address, wallet.clone());
+    
+        let spender: Address = spender_address.parse::<Address>()
+            .map_err(|e| format!("Failed to parse spender address: {}", e))?;
+        let amount = U256::from_dec_str(amount)
+            .map_err(|e| format!("Failed to parse amount: {}", e))?;
+    
+        let tx = erc20.approve(spender, amount);
+        let pending_tx = tx.send().await
+            .map_err(|e| format!("Failed to send transaction: {}", e))?;
+    
+        pending_tx.await.map_err(|e| format!("Transaction failed: {}", e))?;
+    
+        Ok(())
+    }    
 }

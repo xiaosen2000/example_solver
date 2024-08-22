@@ -19,6 +19,7 @@ use {
     std::collections::HashMap,
 };
 
+use crate::get_associated_token_address;
 use serde_json::Value;
 use solana_sdk::pubkey;
 use solana_sdk::signer::keypair::Keypair;
@@ -45,9 +46,6 @@ pub enum Error {
 
     #[error("invalid pubkey in response data: {0}")]
     ParsePubkey(#[from] ParsePubkeyError),
-
-    #[error("base64: {0}")]
-    Base64Decode(#[from] base64::DecodeError),
 
     #[error("bincode: {0}")]
     Bincode(#[from] bincode::Error),
@@ -374,7 +372,7 @@ pub async fn swap(swap_request: SwapRequest) -> Result<Swap> {
 
     fn decode(base64_transaction: String) -> Result<VersionedTransaction> {
         #[allow(deprecated)]
-        bincode::deserialize(&base64::decode(base64_transaction)?).map_err(|err| err.into())
+        bincode::deserialize(&base64::decode(base64_transaction).unwrap()).map_err(|err| err.into())
     }
 
     Ok(Swap {
@@ -466,8 +464,10 @@ pub async fn jupiter_swap(
     _memo: &str,
     rpc_client: &RpcClient,
     keypair: &Keypair,
-) -> Result<solana_sdk::signature::Signature> {
-    let memo = Memo::from_json(&_memo)?;
+    swap_mode: SwapMode,
+) -> core::result::Result<(), String> {
+    // Parse the memo JSON
+    let memo = Memo::from_json(&_memo).map_err(|e| format!("Failed to parse memo: {}", e))?;
 
     let only_direct_routes = false;
     let quotes = quote(
@@ -476,66 +476,62 @@ pub async fn jupiter_swap(
         memo.amount,
         QuoteConfig {
             only_direct_routes,
-            swap_mode: Some(SwapMode::ExactOut),
+            swap_mode: Some(swap_mode),
             slippage_bps: Some(memo.slippage_bps),
             ..QuoteConfig::default()
         },
     )
-    .await?;
+    .await
+    .map_err(|e| format!("Failed to get quotes: {}", e))?;
 
-    // let route = quotes.route_plan[0]
-    //     .swap_info
-    //     .label
-    //     .clone()
-    //     .unwrap_or_else(|| "Unknown DEX".to_string());
-    // println!(
-    //     "Quote: token_in_amount {} for token_out_amount {} via {} (worst case with slippage: {}). Impact: {:.2}%",
-    //     quotes.in_amount,
-    //     quotes.out_amount,
-    //     route,
-    //     quotes.other_amount_threshold,
-    //     quotes.price_impact_pct * 100.
-    // );
+    let user_token_out = get_associated_token_address(&memo.user_account, &memo.token_out);
 
-    let user_token_out = spl_associated_token_account::get_associated_token_address(
-        &memo.user_account,
-        &memo.token_out,
-    );
-
+    // Check if the user token account exists, and create it if necessary
     if rpc_client
         .get_token_account_balance(&user_token_out)
         .await
         .is_err()
     {
-        create_token_account(&memo.user_account, &memo.token_out, &keypair, &rpc_client).await?;
+        create_token_account(&memo.user_account, &memo.token_out, &keypair, &rpc_client)
+            .await
+            .map_err(|e| format!("Failed to create token account: {}", e))?;
     }
 
-    let request: SwapRequest = SwapRequest::new(keypair.pubkey(), quotes.clone(), user_token_out);
+    let request = SwapRequest::new(keypair.pubkey(), quotes.clone(), user_token_out);
 
     let Swap {
         mut swap_transaction,
         last_valid_block_height: _,
-    } = swap(request).await?;
+    } = swap(request)
+        .await
+        .map_err(|e| format!("Swap failed: {}", e))?;
 
-    let recent_blockhash_for_swap: Hash = rpc_client.get_latest_blockhash().await.unwrap();
+    // Get the latest blockhash
+    let recent_blockhash_for_swap: Hash = rpc_client
+        .get_latest_blockhash()
+        .await
+        .map_err(|e| format!("Failed to get latest blockhash: {}", e))?;
     swap_transaction
         .message
         .set_recent_blockhash(recent_blockhash_for_swap);
 
-    let swap_transaction =
-        VersionedTransaction::try_new(swap_transaction.message, &[&keypair]).unwrap();
+    // Sign the swap transaction
+    let swap_transaction = VersionedTransaction::try_new(swap_transaction.message, &[&keypair])
+        .map_err(|e| format!("Failed to create signed transaction: {}", e))?;
 
+    // Simulate the transaction before sending
     rpc_client
         .simulate_transaction(&swap_transaction)
         .await
-        .unwrap();
+        .map_err(|e| format!("Transaction simulation failed: {}", e))?;
 
-    let signature = rpc_client
+    // Send and confirm the transaction
+    rpc_client
         .send_and_confirm_transaction_with_spinner(&swap_transaction)
         .await
-        .unwrap();
+        .map_err(|e| format!("Transaction failed: {}", e))?;
 
-    Ok(signature)
+    Ok(())
 }
 
 pub async fn create_token_account(
