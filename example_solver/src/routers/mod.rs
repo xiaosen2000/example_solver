@@ -20,7 +20,7 @@ lazy_static! {
     // <(src_chain, dst_chain), (src_chain_cost, dst_chain_cost)> // cost in USDT
     pub static ref FLAT_FEES: Arc<RwLock<HashMap<(String, String), (u32, u32)>>> = {
         let mut m = HashMap::new();
-        m.insert(("ethereum".to_string(), "ethereum".to_string()), (0, 30000000));      // 0$ 30$
+        m.insert(("ethereum".to_string(), "ethereum".to_string()), (0, 5000000));      // 0$ 5$
         m.insert(("solana".to_string(), "solana".to_string()), (1, 1));                 // 1$ 1$
         m.insert(("ethereum".to_string(), "solana".to_string()), (0, 10000000));        // 0$ 1$
         m.insert(("solana".to_string(), "ethereum".to_string()), (40000000, 1000000));  // 1$ 10$

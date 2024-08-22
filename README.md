@@ -142,6 +142,23 @@ By managing the flow of intents, broadcasting them to solvers, determining winne
 
 # Solver Setup Instructions
 
+## ⚠️ Important Warnings for Ethereum Solvers
+
+- **⚠️ WARNING:** Modify `send_tx()` on Ethereum for customized gas priority. Make sure you adjust the gas settings accordingly to avoid transaction failures.
+
+- **⚠️ WARNING:** Always use a reliable RPC. Avoid using any unreliable private pools to ensure smooth operations.
+
+- **⚠️ WARNING:** Solvers **MUST** send ETH gas to the Auctioner address `0x25967E0621288bc958DC282c0CA6F451b17aef1c` to pay for several `store_intent()` (with 100$ you will execute about 150 intents with gas price 1Gwei).
+
+- **⚠️ WARNING:** If the Ethereum swap size is **less** than `ETH FLAT_FEE + COMMISSION` or the Solana swap size is **less** than `SOL FLAT_FEE + COMMISSION`, the solver **will not** participate in the auction.
+
+- **⚠️ WARNING:** Solvers need to **approve** USDT to Paraswap on Ethereum using the contract address `0x216b4b4ba9f3e719726886d34a177484278bfcae` **only once**.
+
+- **⚠️ WARNING:** Optimize `FLAT_FEES` based on gas consumption and **optimize token approvals** to reduce unnecessary costs.
+
+- **⚠️ WARNING:** The solver's address **must be the same** as the address used to send ETH to the Auctioner.
+
+
 ## 🔧 Important Configuration: `SOLVER_ADDRESSES` in `chains/mod.rs`
 
 When setting up as a solver within the MANTIS V0 system, one crucial variable you need to pay attention to is `SOLVER_ADDRESSES` located in the `chains/mod.rs` file. This variable is vital for ensuring that your solver is correctly recognized on the blockchain networks where you are solving intents.

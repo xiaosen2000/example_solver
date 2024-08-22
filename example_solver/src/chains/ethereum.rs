@@ -16,6 +16,8 @@ pub mod ethereum_chain {
     use serde::Deserialize;
     use std::str::FromStr;
     use std::sync::Arc;
+    use std::thread::sleep;
+    use std::time::Duration;
 
     #[derive(Deserialize)]
     struct GasPrice {
@@ -185,11 +187,14 @@ pub mod ethereum_chain {
                     .await
                     .map_err(|e| format!("Failed to simulate swap: {}", e))?;
 
-                let tx_hash = send_tx(res_to, res_data, 1, 10_000_000, 0, client_rpc).await;
+                let tx_hash = send_tx(res_to, res_data, 1, 500_000, 0, client_rpc).await;
 
                 // since tx_hash is a String, handle error separately if needed
                 if tx_hash.is_err() {
-                    return Err("Transaction failed with an empty hash".to_string());
+                    return Err(format!(
+                        "Transaction failed with tx_hash error: {:?}",
+                        tx_hash
+                    ));
                 }
 
                 Ok(())
@@ -299,7 +304,26 @@ pub mod ethereum_chain {
             .map_err(|e| format!("Failed to send transaction: {}", e))?;
 
         println!("Transaction hash: {:?}", tx_hash);
-        Ok(())
+
+        // Poll for the transaction receipt
+        loop {
+            match web3_query.eth().transaction_receipt(tx_hash).await {
+                Ok(Some(receipt)) => {
+                    if receipt.status == Some(U64::from(1)) {
+                        println!("Transaction confirmed: {:?}", receipt);
+                        return Ok(());
+                    } else {
+                        return Err("Transaction failed".to_string());
+                    }
+                }
+                Ok(None) => {
+                    // Receipt is not yet available, continue polling
+                    //println!("Transaction pending...");
+                    sleep(Duration::from_secs(5));
+                }
+                Err(e) => return Err(format!("Error while fetching transaction receipt: {}", e)),
+            }
+        }
     }
 
     pub async fn get_evm_token_decimals(erc20: &ERC20<Provider<Http>>) -> u8 {
@@ -387,27 +411,34 @@ pub mod ethereum_chain {
         let provider = Provider::<Http>::try_from(provider_url)
             .map_err(|e| format!("Failed to create provider: {}", e))?;
         let provider = Arc::new(provider);
-    
-        let wallet: LocalWallet = private_key.parse()
+
+        let wallet: LocalWallet = private_key
+            .parse()
             .map_err(|e| format!("Failed to parse private key: {}", e))?;
         let wallet = wallet.with_chain_id(1u64); // Mainnet
         let wallet = Arc::new(SignerMiddleware::new(provider.clone(), wallet));
-    
-        let token_address = token_address.parse::<Address>()
+
+        let token_address = token_address
+            .parse::<Address>()
             .map_err(|e| format!("Failed to parse token address: {}", e))?;
         let erc20 = ERC20::new(token_address, wallet.clone());
-    
-        let spender: Address = spender_address.parse::<Address>()
+
+        let spender: Address = spender_address
+            .parse::<Address>()
             .map_err(|e| format!("Failed to parse spender address: {}", e))?;
-        let amount = U256::from_dec_str(amount)
-            .map_err(|e| format!("Failed to parse amount: {}", e))?;
-    
+        let amount =
+            U256::from_dec_str(amount).map_err(|e| format!("Failed to parse amount: {}", e))?;
+
         let tx = erc20.approve(spender, amount);
-        let pending_tx = tx.send().await
+        let pending_tx = tx
+            .send()
+            .await
             .map_err(|e| format!("Failed to send transaction: {}", e))?;
-    
-        pending_tx.await.map_err(|e| format!("Transaction failed: {}", e))?;
-    
+
+        pending_tx
+            .await
+            .map_err(|e| format!("Transaction failed: {}", e))?;
+
         Ok(())
-    }    
+    }
 }

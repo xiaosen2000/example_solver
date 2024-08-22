@@ -253,7 +253,11 @@ async fn main() {
                                     // swap token_in -> USDT
                                     let memo = format!(
                                         r#"{{"user_account": "{}","token_in": "{}","token_out": "{}","amount": {},"slippage_bps": {}}}"#,
-                                        SOLVER_ADDRESSES.get(1).unwrap(), token_in, usdt_contract_address, amount_in, 100
+                                        SOLVER_ADDRESSES.get(1).unwrap(),
+                                        token_in,
+                                        usdt_contract_address,
+                                        amount_in,
+                                        100
                                     );
 
                                     if let Err(e) = jupiter_swap(
@@ -325,6 +329,7 @@ async fn main() {
 
                             let mut token_in = String::default();
                             let mut token_out = String::default();
+                            let mut amount_in = String::default();
 
                             if let OperationOutput::SwapTransfer(transfer_output) = &intent.outputs
                             {
@@ -332,6 +337,7 @@ async fn main() {
                             }
                             if let OperationInput::SwapTransfer(transfer_input) = &intent.inputs {
                                 token_in = transfer_input.token_in.clone();
+                                amount_in = transfer_input.amount_in.clone();
                             }
 
                             // swap USDT -> token_out
@@ -350,7 +356,14 @@ async fn main() {
 
                             // send token_out -> user & user sends token_in -> solver
                             if ok {
-                                if let Err(e) = approve_erc20(&rpc_url, &private_key, &token_out, ESCROW_SC_ETHEREUM, amount).await
+                                if let Err(e) = approve_erc20(
+                                    &rpc_url,
+                                    &private_key,
+                                    &token_out,
+                                    ESCROW_SC_ETHEREUM,
+                                    amount,
+                                )
+                                .await
                                 {
                                     println!("Error approving {token_out} for solver: {e}");
                                     return;
@@ -373,9 +386,16 @@ async fn main() {
                                     return;
                                 } else if token_in != usdt_contract_address {
                                     // swap token_in -> USDT
-                                    if let Err(e) = approve_erc20(&rpc_url, &private_key, &token_in, PARASWAP, amount).await
+                                    if let Err(e) = approve_erc20(
+                                        &rpc_url,
+                                        &private_key,
+                                        &token_in,
+                                        PARASWAP,
+                                        &amount_in,
+                                    )
+                                    .await
                                     {
-                                        println!("Error approving {token_out} for solver: {e}");
+                                        println!("Error approving {token_in} for solver: {e}");
                                         return;
                                     }
 
@@ -391,16 +411,6 @@ async fn main() {
                                                 return;
                                             }
                                         };
-
-                                    let mut token_in = String::default();
-                                    let mut amount_in = String::default();
-
-                                    if let OperationInput::SwapTransfer(transfer_input) =
-                                        &intent.inputs
-                                    {
-                                        token_in = transfer_input.token_in.clone();
-                                        amount_in = transfer_input.amount_in.clone();
-                                    }
 
                                     let token0_decimals = get_evm_token_decimals(&ERC20::new(
                                         Address::from_str(&token_in).unwrap(),

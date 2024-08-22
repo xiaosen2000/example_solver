@@ -85,7 +85,10 @@ pub mod solana_chain {
 
                 let memo = format!(
                     r#"{{"user_account": "{}","token_in": "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB","token_out": "{}","amount": {},"slippage_bps": {}}}"#,
-                    SOLVER_ADDRESSES.get(1).unwrap(), token_out, amount, 100
+                    SOLVER_ADDRESSES.get(1).unwrap(),
+                    token_out,
+                    amount,
+                    100
                 );
 
                 jupiter_swap(&memo, &client, &from_keypair, SwapMode::ExactOut)
