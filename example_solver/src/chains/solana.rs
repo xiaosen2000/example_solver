@@ -40,7 +40,116 @@ pub mod solana_chain {
         params: Vec<String>,
     }
 
-    pub async fn solana_executing(intent: PostIntentInfo, amount: &str) -> Result<(), String> {
+    pub async fn handle_solana_execution(
+        intent: &PostIntentInfo,
+        intent_id: &str,
+        amount: &str,
+    ) -> Result<(), String> {
+        let from_keypair = Keypair::from_base58_string(
+            env::var("SOLANA_KEYPAIR")
+                .expect("SOLANA_KEYPAIR must be set")
+                .as_str(),
+        );
+        let rpc_url = env::var("SOLANA_RPC").expect("SOLANA_RPC must be set");
+        let client = RpcClient::new_with_commitment(rpc_url, CommitmentConfig::confirmed());
+
+        let usdt_contract_address = "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB";
+
+        let usdt_token_account = get_associated_token_address(
+            &from_keypair.pubkey(),
+            &Pubkey::from_str(usdt_contract_address).unwrap(),
+        );
+
+        let balance_ant = client
+            .get_token_account_balance(&usdt_token_account)
+            .await
+            .map_err(|e| format!("Failed to get token account balance: {}", e))?
+            .ui_amount
+            .unwrap();
+
+        let mut user_account = String::default();
+        let mut token_in = String::default();
+        let mut token_out = String::default();
+        let mut amount_in = String::default();
+
+        if let OperationOutput::SwapTransfer(transfer_output) = &intent.outputs {
+            user_account = transfer_output.dst_chain_user.clone();
+            token_out = transfer_output.token_out.clone();
+        }
+        if let OperationInput::SwapTransfer(transfer_input) = &intent.inputs {
+            token_in = transfer_input.token_in.clone();
+            amount_in = transfer_input.amount_in.clone();
+        }
+
+        let mut ok = true;
+        if token_out != usdt_contract_address {
+            if let Err(e) = solana_trasnfer_swap(intent.clone(), amount).await {
+                println!(
+                    "Error occurred on Solana swap USDT -> token_out (manual swap required): {}",
+                    e
+                );
+                ok = false;
+            }
+        }
+
+        if ok {
+            if let Err(e) = solana_send_funds_to_user(
+                intent_id,
+                &token_in,
+                &token_out,
+                &user_account,
+                intent.src_chain == intent.dst_chain,
+            )
+            .await
+            {
+                println!(
+                    "Error occurred on send token_out -> user & user sends token_in -> solver: {}",
+                    e
+                );
+            } else if token_in != usdt_contract_address {
+                let memo = format!(
+                    r#"{{"user_account": "{}","token_in": "{}","token_out": "{}","amount": {},"slippage_bps": {}}}"#,
+                    SOLVER_ADDRESSES.get(1).unwrap(),
+                    token_in,
+                    usdt_contract_address,
+                    amount_in,
+                    100
+                );
+
+                if let Err(e) = jupiter_swap(&memo, &client, &from_keypair, SwapMode::ExactIn).await
+                {
+                    println!("Error on Solana swap token_in -> USDT: {e}");
+                } else {
+                    let balance_post = client
+                        .get_token_account_balance(&usdt_token_account)
+                        .await
+                        .unwrap()
+                        .ui_amount
+                        .unwrap();
+
+                    let balance = if balance_post >= balance_ant {
+                        balance_post - balance_ant
+                    } else {
+                        balance_ant - balance_post
+                    };
+
+                    println!(
+                        "You have {} {} USDT on intent {intent_id}",
+                        if balance_post >= balance_ant {
+                            "won"
+                        } else {
+                            "lost"
+                        },
+                        balance
+                    );
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    pub async fn solana_trasnfer_swap(intent: PostIntentInfo, amount: &str) -> Result<(), String> {
         let rpc_url = env::var("SOLANA_RPC").map_err(|_| "SOLANA_RPC must be set".to_string())?;
 
         let from_keypair_str =

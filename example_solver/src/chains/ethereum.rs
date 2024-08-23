@@ -5,6 +5,7 @@ pub mod ethereum_chain {
     use crate::json;
     use crate::routers::paraswap::paraswap_router::simulate_swap_paraswap;
     use crate::routers::paraswap::paraswap_router::ParaswapParams;
+    use crate::OperationInput;
     use crate::PostIntentInfo;
     use crate::SOLVER_ADDRESSES;
     use crate::SOLVER_ID;
@@ -97,7 +98,151 @@ pub mod ethereum_chain {
     pub const ESCROW_SC_ETHEREUM: &str = "0x3a2C9A923FA1adbcC5Dc6B3eC3297dEeE5479b6f";
     pub const PARASWAP: &str = "0x216b4b4ba9f3e719726886d34a177484278bfcae";
 
-    pub async fn ethereum_executing(
+    pub async fn handle_ethereum_execution(
+        intent: &PostIntentInfo,
+        intent_id: &str,
+        amount: &str,
+    ) -> Result<(), String> {
+        let usdt_contract_address = "0xdac17f958d2ee523a2206206994597c13d831ec7";
+
+        let rpc_url = env::var("ETHEREUM_RPC").expect("ETHEREUM_RPC must be set");
+        let private_key = env::var("ETHEREUM_PKEY").expect("ETHEREUM_PKEY must be set");
+        let target_address: Address = Address::from_str(SOLVER_ADDRESSES.get(0).unwrap()).unwrap();
+
+        let provider = Arc::new(
+            Provider::<Http>::try_from(&rpc_url)
+                .map_err(|e| format!("Failed to create Ethereum provider: {}", e))?,
+        );
+
+        let usdt_contract = UsdtContract::new(
+            Address::from_str(usdt_contract_address).unwrap(),
+            provider.clone(),
+        );
+
+        let balance_ant = usdt_contract
+            .balance_of(target_address)
+            .call()
+            .await
+            .map_err(|e| format!("Failed to get USDT balance: {}", e))?;
+
+        let mut token_in = String::default();
+        let mut token_out = String::default();
+        let mut amount_in = String::default();
+
+        if let OperationOutput::SwapTransfer(transfer_output) = &intent.outputs {
+            token_out = transfer_output.token_out.clone();
+        }
+        if let OperationInput::SwapTransfer(transfer_input) = &intent.inputs {
+            token_in = transfer_input.token_in.clone();
+            amount_in = transfer_input.amount_in.clone();
+        }
+
+        let mut ok = true;
+        if token_out != usdt_contract_address {
+            if let Err(e) = ethereum_trasnfer_swap(intent_id, intent.clone(), amount).await {
+                println!("Error occurred on Ethereum swap USDT -> token_out: {}", e);
+                ok = false;
+            }
+        }
+
+        if ok {
+            if let Err(e) = approve_erc20(
+                &rpc_url,
+                &private_key,
+                &token_out,
+                ESCROW_SC_ETHEREUM,
+                amount,
+            )
+            .await
+            {
+                println!("Error approving {token_out} for solver: {e}");
+                return Err(e.to_string());
+            }
+
+            if let Err(e) = ethereum_send_funds_to_user(
+                &rpc_url,
+                &private_key,
+                ESCROW_SC_ETHEREUM,
+                intent_id,
+                SOLVER_ADDRESSES.get(0).unwrap(),
+                U256::zero(),
+            )
+            .await
+            {
+                println!("Error occurred on Ethereum send token_out -> user & user sends token_in -> solver: {}", e);
+                return Err(e.to_string());
+            } else if token_in != usdt_contract_address {
+                if let Err(e) =
+                    approve_erc20(&rpc_url, &private_key, &token_in, PARASWAP, &amount_in).await
+                {
+                    println!("Error approving {token_in} for solver: {e}");
+                    return Err(e.to_string());
+                }
+
+                let (token_out, token1_decimals) = match get_token_info("USDT", "ethereum") {
+                    Some((token_out, token1_decimals)) => (token_out.to_string(), token1_decimals),
+                    None => {
+                        println!("Failed to get token info for USDT on Ethereum");
+                        return Err("Failed to get token info".to_string());
+                    }
+                };
+
+                let token0_decimals = get_evm_token_decimals(&ERC20::new(
+                    Address::from_str(&token_in).unwrap(),
+                    provider.clone(),
+                ))
+                .await;
+
+                let paraswap_params = ParaswapParams {
+                    side: "SELL".to_string(),
+                    chain_id: 1,
+                    amount_in: BigInt::from_str(&amount_in).unwrap(),
+                    token_in: Address::from_str(&token_in).unwrap(),
+                    token_out: Address::from_str(&token_out).unwrap(),
+                    token0_decimals: token0_decimals as u32,
+                    token1_decimals: token1_decimals as u32,
+                    wallet_address: Address::from_str(SOLVER_ADDRESSES.get(0).unwrap()).unwrap(),
+                    receiver_address: Address::from_str(SOLVER_ADDRESSES.get(0).unwrap()).unwrap(),
+                    client_aggregator: Client::new(),
+                };
+
+                let (_res_amount, res_data, res_to) = simulate_swap_paraswap(paraswap_params)
+                    .await
+                    .map_err(|e| format!("Error simulating Paraswap swap: {}", e))?;
+
+                if let Err(e) = send_tx(res_to, res_data, 1, 10_000_000, 0, rpc_url).await {
+                    println!("Error sending transaction on Ethereum: {}", e);
+                    return Err(e.to_string());
+                }
+
+                let balance_post = usdt_contract
+                    .balance_of(target_address)
+                    .call()
+                    .await
+                    .map_err(|e| format!("Failed to get post-swap USDT balance: {}", e))?;
+
+                let balance = if balance_post >= balance_ant {
+                    balance_post - balance_ant
+                } else {
+                    balance_ant - balance_post
+                };
+
+                println!(
+                    "You have {} {} USDT on intent {intent_id}",
+                    if balance_post >= balance_ant {
+                        "won"
+                    } else {
+                        "lost"
+                    },
+                    balance.as_u128() as f64 / 1e6
+                );
+            }
+        }
+
+        Ok(())
+    }
+
+    pub async fn ethereum_trasnfer_swap(
         intent_id: &str,
         intent: PostIntentInfo,
         amount: &str,
