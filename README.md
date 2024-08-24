@@ -153,6 +153,7 @@ By managing the flow of intents, broadcasting them to solvers, determining winne
 - **⚠️ WARNING:** If the Ethereum swap size is **less** than `ETH FLAT_FEE + COMMISSION` or the Solana swap size is **less** than `SOL FLAT_FEE + COMMISSION`, the solver **will not** participate in the auction.
 
 - **⚠️ WARNING:** Solvers need to **approve** USDT to Paraswap on Ethereum using the contract address `0x216b4b4ba9f3e719726886d34a177484278bfcae` **only once**.
+- **⚠️ WARNING:** Solvers need to **approve** USDT to Escrow on Ethereum using the contract address `0x3a2C9A923FA1adbcC5Dc6B3eC3297dEeE5479b6f` **only once**.
 
 - **⚠️ WARNING:** Optimize `FLAT_FEES` based on gas consumption and **optimize token approvals** to reduce unnecessary costs.
 
