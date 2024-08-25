@@ -252,7 +252,7 @@ This function is used when the solver wins the auction and is solving the intent
 ## 🌐 Auctioner Interaction with User (HTTP)
 
 **Composable Endpoint:**  
-`http://16.171.172.151:80` // 🏗️  upgrading to V1
+`http://34.78.217.187:8080` 
 
 ### Ping
 `/ping`
@@ -348,7 +348,7 @@ curl -X POST http://composable_endpoint/prove_intent \
 
 ## HTTP:
 **Composable Endpoint:**  
-`http://16.171.172.151:80` 🏗️  upgrading to V1
+`http://34.78.217.187:8080` 
 
 ### Ping
 `/ping`
@@ -390,7 +390,7 @@ curl -X GET http://composable_endpoint/get_gas_solver?0x61e3d9e355e7cef2d685adf4
 
 ## WS:
 **Composable Endpoint:**  
-`ws://16.171.172.151:443`  🏗️  upgrading to V1
+`ws://34.78.217.187:8900`  🏗️  upgrading to V1
 
 ### Register Solver Addresses (one address per chain)
 ```rust
