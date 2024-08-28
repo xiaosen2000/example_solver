@@ -125,6 +125,37 @@ Both Single Domain and Cross-Chain Domain options are designed with the highest 
 By managing the flow of intents, broadcasting them to solvers, determining winners, and ensuring transactions are executed and stored properly, the Auctioneer facilitates seamless and secure interactions within a decentralized ecosystem.
 
 ---
+## 🪙 Token Workflow
+
+### 🚀 Single Domain Workflow:
+1. **User Actions**:
+   - The user escrows `token_in` on the Escrow Contract (`Escrow SC`) within the same domain.
+  
+2. **Solver Actions**:
+   - The solver calls `send_funds_to_user()`, which triggers the following actions:
+     - Sends `token_out` to the user. 
+     - Receives the `token_in` from the escrow in the **SAME** transaction.
+
+3. **Smart Contract Role**:
+   - The `Escrow SC` ensures that everything is decentralized 🕸️ and operates according to the intent information submitted by the user, guaranteeing that both the solver and the user experience the same level of fairness ⚖️.
+
+### 🌐 Cross-Domain Workflow:
+1. **User Actions**:
+   - The user escrows `token_in` on the **source chain** via the Escrow Contract (`Escrow SC`).
+
+2. **Solver Actions**:
+   - The solver calls `send_funds_to_user()` on the **destination chain**. This function does the following:
+     - Sends `token_out` to the user.
+     - Sends a cross-chain message 📨 within the **SAME** function, according to the intent info instructions, to ensure fairness for both the solver and the user.
+
+3. **Cross-Chain Message**:
+   - The message contains the necessary information to release the `token_in` on the source chain for the solver, ensuring that everything is handled fairly across domains 🔄.
+
+### ⚡ Summary:
+- **Single Domain**: Everything happens within the same transaction, ensuring fairness instantly.
+- **Cross Domain**: A cross-chain message ensures that fairness is maintained across different chains, allowing the solver to receive `token_in` after sending `token_out`.
+
+---
 
 ## 🔑 Message Signing Process
 
