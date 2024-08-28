@@ -151,10 +151,6 @@ By managing the flow of intents, broadcasting them to solvers, determining winne
 3. **Cross-Chain Message**:
    - The message contains the necessary information to release the `token_in` on the source chain for the solver, ensuring that everything is handled fairly across domains 🔄.
 
-### ⚡ Summary:
-- **Single Domain**: Everything happens within the same transaction, ensuring fairness instantly.
-- **Cross Domain**: A cross-chain message ensures that fairness is maintained across different chains, allowing the solver to receive `token_in` after sending `token_out`.
-
 ---
 
 ## 🔑 Message Signing Process
