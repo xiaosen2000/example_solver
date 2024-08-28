@@ -125,7 +125,7 @@ Both Single Domain and Cross-Chain Domain options are designed with the highest 
 By managing the flow of intents, broadcasting them to solvers, determining winners, and ensuring transactions are executed and stored properly, the Auctioneer facilitates seamless and secure interactions within a decentralized ecosystem.
 
 ---
-## 🪙 Token Workflow
+## 🪙 User - Solver - Token Workflow
 
 ### 🚀 Single Domain Workflow:
 1. **User Actions**:
