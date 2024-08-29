@@ -175,7 +175,12 @@ By managing the flow of intents, broadcasting them to solvers, determining winne
 
 - **⚠️ WARNING:** Always use a reliable RPC. Avoid using any unreliable private pools to ensure smooth operations.
 
-- **⚠️ WARNING:** Solvers **MUST** send ETH gas to the Auctioner address `0x25967E0621288bc958DC282c0CA6F451b17aef1c` to pay for several `store_intent()` (with 100$ you will execute about 150 intents with gas price 1Gwei).
+- **⚠️ WARNING:** Solvers **MUST** send ETH gas to the Auctioner address `0x25967E0621288bc958DC282c0CA6F451b17aef1c` to pay for several `store_intent()` (with 100$ you will execute about 150 intents with gas price 1Gwei) Then, solver must send the tx hash of this transfer, solver does this manually.
+  ```rust
+curl -X POST http://composable_endpoint/prove_gas_sent      -H "Content-Type: application/json"      -d '{
+           "tx_hash": "0x55.."
+         }'
+```
 
 - **⚠️ WARNING:** If the Ethereum swap size is **less** than `ETH FLAT_FEE + COMMISSION` or the Solana swap size is **less** than `SOL FLAT_FEE + COMMISSION`, the solver **will not** participate in the auction.
 
@@ -388,6 +393,32 @@ curl -X GET http://composable_endpoint/ping
 ```rust
 {
    "msg": "pong"
+}
+```
+
+### Prove Funds were Sent from User to Escrow SC:
+`/prove_gas_sent`
+
+```rust
+curl -X POST http://composable_endpoint/prove_gas_sent      -H "Content-Type: application/json"      -d '{
+           "tx_hash": "0x55.."
+         }'
+```
+
+### Response:
+**OK:**
+```rust
+{
+   "code": 5,
+   "msg": "Tx successfully proved"
+}
+```
+
+**ERROR:**
+```rust
+{
+   "code": 0,
+   "msg": error_msg 
 }
 ```
 
