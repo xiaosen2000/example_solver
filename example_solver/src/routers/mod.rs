@@ -20,10 +20,10 @@ lazy_static! {
     // <(src_chain, dst_chain), (src_chain_cost, dst_chain_cost)> // cost in USDT
     pub static ref FLAT_FEES: Arc<RwLock<HashMap<(String, String), (u32, u32)>>> = {
         let mut m = HashMap::new();
-        m.insert(("ethereum".to_string(), "ethereum".to_string()), (0, 5000000));      // 0$ 5$
-        m.insert(("solana".to_string(), "solana".to_string()), (1, 1));                 // 1$ 1$
-        m.insert(("ethereum".to_string(), "solana".to_string()), (0, 10000000));        // 0$ 1$
-        m.insert(("solana".to_string(), "ethereum".to_string()), (40000000, 1000000));  // 1$ 10$
+        m.insert(("ethereum".to_string(), "ethereum".to_string()), (0, 3000000));       // 0$ 3$
+        m.insert(("solana".to_string(), "solana".to_string()), (0, 200000));            // 0$ 0.2$
+        m.insert(("ethereum".to_string(), "solana".to_string()), (1000000, 100000));    // 1$ 0.1$
+        m.insert(("solana".to_string(), "ethereum".to_string()), (100000, 2000000));    // 0.1$ 2$
         Arc::new(RwLock::new(m))
     };
 }
@@ -52,9 +52,10 @@ pub async fn get_simulate_swap_intent(
     };
 
     let (bridge_token_address_src, _) = get_token_info(bridge_token, src_chain).unwrap();
-
     let mut amount_out_src_chain = BigInt::from_str(&amount_in).unwrap();
-    if bridge_token_address_src != token_in {
+
+    if !bridge_token_address_src.eq_ignore_ascii_case(&token_in) {
+        // simulate token_in -> USDT
         if src_chain == "ethereum" {
             amount_out_src_chain =
                 ethereum_simulate_swap(&token_in, &amount_in, bridge_token_address_src).await;
@@ -102,7 +103,8 @@ pub async fn get_simulate_swap_intent(
             + (amount_out_src_chain * BigInt::from(comission) / BigInt::from(100_000)));
     let mut final_amount_out = amount_in_dst_chain.to_string();
 
-    if bridge_token_address_dst != token_out {
+    if !bridge_token_address_dst.eq_ignore_ascii_case(&token_out) {
+        // simulate USDT -> token_out
         if dst_chain == "ethereum" {
             final_amount_out =
                 ethereum_simulate_swap(bridge_token_address_src, &final_amount_out, &token_out)

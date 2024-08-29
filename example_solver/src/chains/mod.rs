@@ -114,7 +114,7 @@ lazy_static! {
         let mut usdt_addresses = HashMap::new();
         usdt_addresses.insert(
             Blockchain::Ethereum,
-            "dAC17F958D2ee523a2206206994597C13D831ec7",
+            "0xdAC17F958D2ee523a2206206994597C13D831ec7",
         );
         usdt_addresses.insert(
             Blockchain::Solana,

@@ -893,7 +893,7 @@ dependencies = [
 [[package]]
 name = "bridge-escrow"
 version = "0.0.3"
-source = "git+https://github.com/ComposableFi/emulated-light-client.git?branch=fast-bridge#93d26adcbe3c2fbb95d1411359ba07e80e8632cc"
+source = "git+https://github.com/ComposableFi/emulated-light-client.git?branch=fast-bridge#0772575dbb8871b6a89c29d39f332432473b3918"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
@@ -1100,7 +1100,7 @@ dependencies = [
 [[package]]
 name = "cf-guest"
 version = "0.0.0"
-source = "git+https://github.com/ComposableFi/emulated-light-client.git?branch=fast-bridge#93d26adcbe3c2fbb95d1411359ba07e80e8632cc"
+source = "git+https://github.com/ComposableFi/emulated-light-client.git?branch=fast-bridge#0772575dbb8871b6a89c29d39f332432473b3918"
 dependencies = [
  "borsh 0.10.3",
  "bytemuck",
@@ -2657,7 +2657,7 @@ dependencies = [
 [[package]]
 name = "guestchain"
 version = "0.0.0"
-source = "git+https://github.com/ComposableFi/emulated-light-client.git?branch=fast-bridge#93d26adcbe3c2fbb95d1411359ba07e80e8632cc"
+source = "git+https://github.com/ComposableFi/emulated-light-client.git?branch=fast-bridge#0772575dbb8871b6a89c29d39f332432473b3918"
 dependencies = [
  "borsh 0.10.3",
  "bytemuck",
@@ -2988,7 +2988,7 @@ dependencies = [
 [[package]]
 name = "ibc"
 version = "0.50.0"
-source = "git+https://github.com/mina86/ibc-rs?rev=6015aea441d4660f7f7ecd89b5e770a993448089#6015aea441d4660f7f7ecd89b5e770a993448089"
+source = "git+https://github.com/mina86/ibc-rs?rev=f07276383091f75b7ee8bff6fd434f8214ac5054#f07276383091f75b7ee8bff6fd434f8214ac5054"
 dependencies = [
  "ibc-apps",
  "ibc-clients",
@@ -3001,7 +3001,7 @@ dependencies = [
 [[package]]
 name = "ibc-app-transfer"
 version = "0.50.0"
-source = "git+https://github.com/mina86/ibc-rs?rev=6015aea441d4660f7f7ecd89b5e770a993448089#6015aea441d4660f7f7ecd89b5e770a993448089"
+source = "git+https://github.com/mina86/ibc-rs?rev=f07276383091f75b7ee8bff6fd434f8214ac5054#f07276383091f75b7ee8bff6fd434f8214ac5054"
 dependencies = [
  "ibc-app-transfer-types",
  "ibc-core",
@@ -3011,7 +3011,7 @@ dependencies = [
 [[package]]
 name = "ibc-app-transfer-types"
 version = "0.50.0"
-source = "git+https://github.com/mina86/ibc-rs?rev=6015aea441d4660f7f7ecd89b5e770a993448089#6015aea441d4660f7f7ecd89b5e770a993448089"
+source = "git+https://github.com/mina86/ibc-rs?rev=f07276383091f75b7ee8bff6fd434f8214ac5054#f07276383091f75b7ee8bff6fd434f8214ac5054"
 dependencies = [
  "borsh 0.10.3",
  "derive_more",
@@ -3026,7 +3026,7 @@ dependencies = [
 [[package]]
 name = "ibc-apps"
 version = "0.50.0"
-source = "git+https://github.com/mina86/ibc-rs?rev=6015aea441d4660f7f7ecd89b5e770a993448089#6015aea441d4660f7f7ecd89b5e770a993448089"
+source = "git+https://github.com/mina86/ibc-rs?rev=f07276383091f75b7ee8bff6fd434f8214ac5054#f07276383091f75b7ee8bff6fd434f8214ac5054"
 dependencies = [
  "ibc-app-transfer",
 ]
@@ -3034,7 +3034,7 @@ dependencies = [
 [[package]]
 name = "ibc-client-tendermint"
 version = "0.50.0"
-source = "git+https://github.com/mina86/ibc-rs?rev=6015aea441d4660f7f7ecd89b5e770a993448089#6015aea441d4660f7f7ecd89b5e770a993448089"
+source = "git+https://github.com/mina86/ibc-rs?rev=f07276383091f75b7ee8bff6fd434f8214ac5054#f07276383091f75b7ee8bff6fd434f8214ac5054"
 dependencies = [
  "derive_more",
  "ibc-client-tendermint-types",
@@ -3051,7 +3051,7 @@ dependencies = [
 [[package]]
 name = "ibc-client-tendermint-types"
 version = "0.50.0"
-source = "git+https://github.com/mina86/ibc-rs?rev=6015aea441d4660f7f7ecd89b5e770a993448089#6015aea441d4660f7f7ecd89b5e770a993448089"
+source = "git+https://github.com/mina86/ibc-rs?rev=f07276383091f75b7ee8bff6fd434f8214ac5054#f07276383091f75b7ee8bff6fd434f8214ac5054"
 dependencies = [
  "borsh 0.10.3",
  "displaydoc",
@@ -3070,7 +3070,7 @@ dependencies = [
 [[package]]
 name = "ibc-client-wasm-types"
 version = "0.50.0"
-source = "git+https://github.com/mina86/ibc-rs?rev=6015aea441d4660f7f7ecd89b5e770a993448089#6015aea441d4660f7f7ecd89b5e770a993448089"
+source = "git+https://github.com/mina86/ibc-rs?rev=f07276383091f75b7ee8bff6fd434f8214ac5054#f07276383091f75b7ee8bff6fd434f8214ac5054"
 dependencies = [
  "base64 0.21.7",
  "displaydoc",
@@ -3084,7 +3084,7 @@ dependencies = [
 [[package]]
 name = "ibc-clients"
 version = "0.50.0"
-source = "git+https://github.com/mina86/ibc-rs?rev=6015aea441d4660f7f7ecd89b5e770a993448089#6015aea441d4660f7f7ecd89b5e770a993448089"
+source = "git+https://github.com/mina86/ibc-rs?rev=f07276383091f75b7ee8bff6fd434f8214ac5054#f07276383091f75b7ee8bff6fd434f8214ac5054"
 dependencies = [
  "ibc-client-tendermint",
  "ibc-client-wasm-types",
@@ -3093,7 +3093,7 @@ dependencies = [
 [[package]]
 name = "ibc-core"
 version = "0.50.0"
-source = "git+https://github.com/mina86/ibc-rs?rev=6015aea441d4660f7f7ecd89b5e770a993448089#6015aea441d4660f7f7ecd89b5e770a993448089"
+source = "git+https://github.com/mina86/ibc-rs?rev=f07276383091f75b7ee8bff6fd434f8214ac5054#f07276383091f75b7ee8bff6fd434f8214ac5054"
 dependencies = [
  "ibc-core-channel",
  "ibc-core-client",
@@ -3109,7 +3109,7 @@ dependencies = [
 [[package]]
 name = "ibc-core-channel"
 version = "0.50.0"
-source = "git+https://github.com/mina86/ibc-rs?rev=6015aea441d4660f7f7ecd89b5e770a993448089#6015aea441d4660f7f7ecd89b5e770a993448089"
+source = "git+https://github.com/mina86/ibc-rs?rev=f07276383091f75b7ee8bff6fd434f8214ac5054#f07276383091f75b7ee8bff6fd434f8214ac5054"
 dependencies = [
  "ibc-core-channel-types",
  "ibc-core-client",
@@ -3124,7 +3124,7 @@ dependencies = [
 [[package]]
 name = "ibc-core-channel-types"
 version = "0.50.0"
-source = "git+https://github.com/mina86/ibc-rs?rev=6015aea441d4660f7f7ecd89b5e770a993448089#6015aea441d4660f7f7ecd89b5e770a993448089"
+source = "git+https://github.com/mina86/ibc-rs?rev=f07276383091f75b7ee8bff6fd434f8214ac5054#f07276383091f75b7ee8bff6fd434f8214ac5054"
 dependencies = [
  "borsh 0.10.3",
  "derive_more",
@@ -3144,7 +3144,7 @@ dependencies = [
 [[package]]
 name = "ibc-core-client"
 version = "0.50.0"
-source = "git+https://github.com/mina86/ibc-rs?rev=6015aea441d4660f7f7ecd89b5e770a993448089#6015aea441d4660f7f7ecd89b5e770a993448089"
+source = "git+https://github.com/mina86/ibc-rs?rev=f07276383091f75b7ee8bff6fd434f8214ac5054#f07276383091f75b7ee8bff6fd434f8214ac5054"
 dependencies = [
  "ibc-client-tendermint-types",
  "ibc-core-client-context",
@@ -3158,7 +3158,7 @@ dependencies = [
 [[package]]
 name = "ibc-core-client-context"
 version = "0.50.0"
-source = "git+https://github.com/mina86/ibc-rs?rev=6015aea441d4660f7f7ecd89b5e770a993448089#6015aea441d4660f7f7ecd89b5e770a993448089"
+source = "git+https://github.com/mina86/ibc-rs?rev=f07276383091f75b7ee8bff6fd434f8214ac5054#f07276383091f75b7ee8bff6fd434f8214ac5054"
 dependencies = [
  "derive_more",
  "displaydoc",
@@ -3175,7 +3175,7 @@ dependencies = [
 [[package]]
 name = "ibc-core-client-types"
 version = "0.50.0"
-source = "git+https://github.com/mina86/ibc-rs?rev=6015aea441d4660f7f7ecd89b5e770a993448089#6015aea441d4660f7f7ecd89b5e770a993448089"
+source = "git+https://github.com/mina86/ibc-rs?rev=f07276383091f75b7ee8bff6fd434f8214ac5054#f07276383091f75b7ee8bff6fd434f8214ac5054"
 dependencies = [
  "borsh 0.10.3",
  "derive_more",
@@ -3192,7 +3192,7 @@ dependencies = [
 [[package]]
 name = "ibc-core-commitment-types"
 version = "0.50.0"
-source = "git+https://github.com/mina86/ibc-rs?rev=6015aea441d4660f7f7ecd89b5e770a993448089#6015aea441d4660f7f7ecd89b5e770a993448089"
+source = "git+https://github.com/mina86/ibc-rs?rev=f07276383091f75b7ee8bff6fd434f8214ac5054#f07276383091f75b7ee8bff6fd434f8214ac5054"
 dependencies = [
  "borsh 0.10.3",
  "derive_more",
@@ -3207,7 +3207,7 @@ dependencies = [
 [[package]]
 name = "ibc-core-connection"
 version = "0.50.0"
-source = "git+https://github.com/mina86/ibc-rs?rev=6015aea441d4660f7f7ecd89b5e770a993448089#6015aea441d4660f7f7ecd89b5e770a993448089"
+source = "git+https://github.com/mina86/ibc-rs?rev=f07276383091f75b7ee8bff6fd434f8214ac5054#f07276383091f75b7ee8bff6fd434f8214ac5054"
 dependencies = [
  "ibc-core-client",
  "ibc-core-connection-types",
@@ -3219,7 +3219,7 @@ dependencies = [
 [[package]]
 name = "ibc-core-connection-types"
 version = "0.50.0"
-source = "git+https://github.com/mina86/ibc-rs?rev=6015aea441d4660f7f7ecd89b5e770a993448089#6015aea441d4660f7f7ecd89b5e770a993448089"
+source = "git+https://github.com/mina86/ibc-rs?rev=f07276383091f75b7ee8bff6fd434f8214ac5054#f07276383091f75b7ee8bff6fd434f8214ac5054"
 dependencies = [
  "borsh 0.10.3",
  "derive_more",
@@ -3237,7 +3237,7 @@ dependencies = [
 [[package]]
 name = "ibc-core-handler"
 version = "0.50.0"
-source = "git+https://github.com/mina86/ibc-rs?rev=6015aea441d4660f7f7ecd89b5e770a993448089#6015aea441d4660f7f7ecd89b5e770a993448089"
+source = "git+https://github.com/mina86/ibc-rs?rev=f07276383091f75b7ee8bff6fd434f8214ac5054#f07276383091f75b7ee8bff6fd434f8214ac5054"
 dependencies = [
  "ibc-client-tendermint-types",
  "ibc-core-channel",
@@ -3253,7 +3253,7 @@ dependencies = [
 [[package]]
 name = "ibc-core-handler-types"
 version = "0.50.0"
-source = "git+https://github.com/mina86/ibc-rs?rev=6015aea441d4660f7f7ecd89b5e770a993448089#6015aea441d4660f7f7ecd89b5e770a993448089"
+source = "git+https://github.com/mina86/ibc-rs?rev=f07276383091f75b7ee8bff6fd434f8214ac5054#f07276383091f75b7ee8bff6fd434f8214ac5054"
 dependencies = [
  "borsh 0.10.3",
  "derive_more",
@@ -3274,7 +3274,7 @@ dependencies = [
 [[package]]
 name = "ibc-core-host"
 version = "0.50.0"
-source = "git+https://github.com/mina86/ibc-rs?rev=6015aea441d4660f7f7ecd89b5e770a993448089#6015aea441d4660f7f7ecd89b5e770a993448089"
+source = "git+https://github.com/mina86/ibc-rs?rev=f07276383091f75b7ee8bff6fd434f8214ac5054#f07276383091f75b7ee8bff6fd434f8214ac5054"
 dependencies = [
  "derive_more",
  "displaydoc",
@@ -3292,7 +3292,7 @@ dependencies = [
 [[package]]
 name = "ibc-core-host-cosmos"
 version = "0.50.0"
-source = "git+https://github.com/mina86/ibc-rs?rev=6015aea441d4660f7f7ecd89b5e770a993448089#6015aea441d4660f7f7ecd89b5e770a993448089"
+source = "git+https://github.com/mina86/ibc-rs?rev=f07276383091f75b7ee8bff6fd434f8214ac5054#f07276383091f75b7ee8bff6fd434f8214ac5054"
 dependencies = [
  "borsh 0.10.3",
  "derive_more",
@@ -3316,7 +3316,7 @@ dependencies = [
 [[package]]
 name = "ibc-core-host-types"
 version = "0.50.0"
-source = "git+https://github.com/mina86/ibc-rs?rev=6015aea441d4660f7f7ecd89b5e770a993448089#6015aea441d4660f7f7ecd89b5e770a993448089"
+source = "git+https://github.com/mina86/ibc-rs?rev=f07276383091f75b7ee8bff6fd434f8214ac5054#f07276383091f75b7ee8bff6fd434f8214ac5054"
 dependencies = [
  "borsh 0.10.3",
  "derive_more",
@@ -3328,7 +3328,7 @@ dependencies = [
 [[package]]
 name = "ibc-core-router"
 version = "0.50.0"
-source = "git+https://github.com/mina86/ibc-rs?rev=6015aea441d4660f7f7ecd89b5e770a993448089#6015aea441d4660f7f7ecd89b5e770a993448089"
+source = "git+https://github.com/mina86/ibc-rs?rev=f07276383091f75b7ee8bff6fd434f8214ac5054#f07276383091f75b7ee8bff6fd434f8214ac5054"
 dependencies = [
  "derive_more",
  "displaydoc",
@@ -3342,7 +3342,7 @@ dependencies = [
 [[package]]
 name = "ibc-core-router-types"
 version = "0.50.0"
-source = "git+https://github.com/mina86/ibc-rs?rev=6015aea441d4660f7f7ecd89b5e770a993448089#6015aea441d4660f7f7ecd89b5e770a993448089"
+source = "git+https://github.com/mina86/ibc-rs?rev=f07276383091f75b7ee8bff6fd434f8214ac5054#f07276383091f75b7ee8bff6fd434f8214ac5054"
 dependencies = [
  "borsh 0.10.3",
  "derive_more",
@@ -3358,7 +3358,7 @@ dependencies = [
 [[package]]
 name = "ibc-derive"
 version = "0.6.0"
-source = "git+https://github.com/mina86/ibc-rs?rev=6015aea441d4660f7f7ecd89b5e770a993448089#6015aea441d4660f7f7ecd89b5e770a993448089"
+source = "git+https://github.com/mina86/ibc-rs?rev=f07276383091f75b7ee8bff6fd434f8214ac5054#f07276383091f75b7ee8bff6fd434f8214ac5054"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -3368,7 +3368,7 @@ dependencies = [
 [[package]]
 name = "ibc-primitives"
 version = "0.50.0"
-source = "git+https://github.com/mina86/ibc-rs?rev=6015aea441d4660f7f7ecd89b5e770a993448089#6015aea441d4660f7f7ecd89b5e770a993448089"
+source = "git+https://github.com/mina86/ibc-rs?rev=f07276383091f75b7ee8bff6fd434f8214ac5054#f07276383091f75b7ee8bff6fd434f8214ac5054"
 dependencies = [
  "borsh 0.10.3",
  "derive_more",
@@ -3703,10 +3703,11 @@ checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
 [[package]]
 name = "lib"
 version = "0.0.0"
-source = "git+https://github.com/ComposableFi/emulated-light-client.git?branch=fast-bridge#93d26adcbe3c2fbb95d1411359ba07e80e8632cc"
+source = "git+https://github.com/ComposableFi/emulated-light-client.git?branch=fast-bridge#0772575dbb8871b6a89c29d39f332432473b3918"
 dependencies = [
  "base64 0.21.7",
  "borsh 0.10.3",
+ "bs58 0.5.1",
  "bytemuck",
  "derive_more",
  "sha2 0.10.8",
@@ -3869,7 +3870,7 @@ dependencies = [
 [[package]]
 name = "memory"
 version = "0.0.0"
-source = "git+https://github.com/ComposableFi/emulated-light-client.git?branch=fast-bridge#93d26adcbe3c2fbb95d1411359ba07e80e8632cc"
+source = "git+https://github.com/ComposableFi/emulated-light-client.git?branch=fast-bridge#0772575dbb8871b6a89c29d39f332432473b3918"
 dependencies = [
  "derive_more",
 ]
@@ -3924,7 +3925,7 @@ version = "3.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ba8ee05284d79b367ae8966d558e1a305a781fc80c9df51f37775169117ba64f"
 dependencies = [
- "borsh 0.10.3",
+ "borsh 0.9.3",
  "num-derive 0.3.3",
  "num-traits",
  "solana-program",
@@ -4705,7 +4706,7 @@ checksum = "22505a5c94da8e3b7c2996394d1c933236c4d743e81a410bcca4e6989fc066a4"
 dependencies = [
  "bytes",
  "heck 0.5.0",
- "itertools 0.11.0",
+ "itertools 0.10.5",
  "log",
  "multimap",
  "once_cell",
@@ -4723,7 +4724,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "81bddcdb20abf9501610992b6759a4c888aef7d1a7247ef75e2404275ac24af1"
 dependencies = [
  "anyhow",
- "itertools 0.11.0",
+ "itertools 0.10.5",
  "proc-macro2",
  "quote",
  "syn 2.0.66",
@@ -4741,7 +4742,7 @@ dependencies = [
 [[package]]
 name = "proto-utils"
 version = "0.0.0"
-source = "git+https://github.com/ComposableFi/emulated-light-client.git?branch=fast-bridge#93d26adcbe3c2fbb95d1411359ba07e80e8632cc"
+source = "git+https://github.com/ComposableFi/emulated-light-client.git?branch=fast-bridge#0772575dbb8871b6a89c29d39f332432473b3918"
 dependencies = [
  "const_format",
  "derive_more",
@@ -5347,7 +5348,7 @@ dependencies = [
 [[package]]
 name = "sealable-trie"
 version = "0.0.0"
-source = "git+https://github.com/ComposableFi/emulated-light-client.git?branch=fast-bridge#93d26adcbe3c2fbb95d1411359ba07e80e8632cc"
+source = "git+https://github.com/ComposableFi/emulated-light-client.git?branch=fast-bridge#0772575dbb8871b6a89c29d39f332432473b3918"
 dependencies = [
  "ascii 1.1.0",
  "base64 0.21.7",
@@ -5737,7 +5738,7 @@ dependencies = [
 [[package]]
 name = "solana-allocator"
 version = "0.0.3"
-source = "git+https://github.com/ComposableFi/emulated-light-client.git?branch=fast-bridge#93d26adcbe3c2fbb95d1411359ba07e80e8632cc"
+source = "git+https://github.com/ComposableFi/emulated-light-client.git?branch=fast-bridge#0772575dbb8871b6a89c29d39f332432473b3918"
 dependencies = [
  "bytemuck",
  "solana-program",
@@ -5869,7 +5870,7 @@ dependencies = [
 [[package]]
 name = "solana-ibc"
 version = "0.0.3"
-source = "git+https://github.com/ComposableFi/emulated-light-client.git?branch=fast-bridge#93d26adcbe3c2fbb95d1411359ba07e80e8632cc"
+source = "git+https://github.com/ComposableFi/emulated-light-client.git?branch=fast-bridge#0772575dbb8871b6a89c29d39f332432473b3918"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
@@ -6293,11 +6294,10 @@ checksum = "468aa43b7edb1f9b7b7b686d5c3aeb6630dc1708e86e31343499dd5c4d775183"
 [[package]]
 name = "solana-signature-verifier"
 version = "0.0.3"
-source = "git+https://github.com/ComposableFi/emulated-light-client.git?branch=fast-bridge#93d26adcbe3c2fbb95d1411359ba07e80e8632cc"
+source = "git+https://github.com/ComposableFi/emulated-light-client.git?branch=fast-bridge#0772575dbb8871b6a89c29d39f332432473b3918"
 dependencies = [
  "base64 0.21.7",
  "borsh 0.10.3",
- "bs58 0.5.1",
  "bytemuck",
  "derive_more",
  "guestchain",
@@ -6406,7 +6406,7 @@ dependencies = [
 [[package]]
 name = "solana-trie"
 version = "0.0.3"
-source = "git+https://github.com/ComposableFi/emulated-light-client.git?branch=fast-bridge#93d26adcbe3c2fbb95d1411359ba07e80e8632cc"
+source = "git+https://github.com/ComposableFi/emulated-light-client.git?branch=fast-bridge#0772575dbb8871b6a89c29d39f332432473b3918"
 dependencies = [
  "bytemuck",
  "lib",
@@ -7029,7 +7029,7 @@ checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 [[package]]
 name = "stdx"
 version = "0.0.0"
-source = "git+https://github.com/ComposableFi/emulated-light-client.git?branch=fast-bridge#93d26adcbe3c2fbb95d1411359ba07e80e8632cc"
+source = "git+https://github.com/ComposableFi/emulated-light-client.git?branch=fast-bridge#0772575dbb8871b6a89c29d39f332432473b3918"
 
 [[package]]
 name = "string_cache"
@@ -7355,9 +7355,9 @@ dependencies = [
 
 [[package]]
 name = "time"
-version = "0.3.34"
+version = "0.3.36"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c8248b6521bb14bc45b4067159b9b6ad792e2d6d754d6c41fb50e29fefe38749"
+checksum = "5dfd88e563464686c916c7e46e623e520ddc6d79fa6641390f2e3fa86e83e885"
 dependencies = [
  "deranged",
  "itoa",
@@ -7376,9 +7376,9 @@ checksum = "ef927ca75afb808a4d64dd374f00a2adf8d0fcff8e7b184af886c3c87ec4a3f3"
 
 [[package]]
 name = "time-macros"
-version = "0.2.17"
+version = "0.2.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7ba3a3ef41e6672a2f0f001392bb5dcd3ff0a9992d618ca761a11c3121547774"
+checksum = "3f252a68540fde3a3877aeea552b832b40ab9a69e318efd078774a01ddee1ccf"
 dependencies = [
  "num-conv",
  "time-core",
@@ -7645,7 +7645,7 @@ dependencies = [
 [[package]]
 name = "trie-ids"
 version = "0.0.0"
-source = "git+https://github.com/ComposableFi/emulated-light-client.git?branch=fast-bridge#93d26adcbe3c2fbb95d1411359ba07e80e8632cc"
+source = "git+https://github.com/ComposableFi/emulated-light-client.git?branch=fast-bridge#0772575dbb8871b6a89c29d39f332432473b3918"
 dependencies = [
  "ascii 1.1.0",
  "base64 0.21.7",
@@ -7893,7 +7893,7 @@ checksum = "9c8d87e72b64a3b4db28d11ce29237c246188f4f51057d65a7eab63b7987e423"
 [[package]]
 name = "wasm"
 version = "0.0.0"
-source = "git+https://github.com/ComposableFi/emulated-light-client.git?branch=fast-bridge#93d26adcbe3c2fbb95d1411359ba07e80e8632cc"
+source = "git+https://github.com/ComposableFi/emulated-light-client.git?branch=fast-bridge#0772575dbb8871b6a89c29d39f332432473b3918"
 dependencies = [
  "const_format",
  "derive_more",

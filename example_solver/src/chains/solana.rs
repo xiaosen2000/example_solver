@@ -81,75 +81,87 @@ pub mod solana_chain {
             amount_in = transfer_input.amount_in.clone();
         }
 
-        let mut ok = true;
-        if token_out != usdt_contract_address {
-            if let Err(e) = solana_trasnfer_swap(intent.clone(), amount).await {
-                println!(
+        // swap USDT -> token_out
+        if !token_out.eq_ignore_ascii_case(usdt_contract_address) {
+            if let Err(e) = solana_transfer_swap(intent.clone(), amount).await {
+                return Err(format!(
                     "Error occurred on Solana swap USDT -> token_out (manual swap required): {}",
                     e
-                );
-                ok = false;
+                ));
             }
         }
 
-        if ok {
-            if let Err(e) = solana_send_funds_to_user(
-                intent_id,
-                &token_in,
-                &token_out,
-                &user_account,
-                intent.src_chain == intent.dst_chain,
-            )
-            .await
-            {
-                println!(
-                    "Error occurred on send token_out -> user & user sends token_in -> solver: {}",
-                    e
-                );
-            } else if token_in != usdt_contract_address {
-                let memo = format!(
-                    r#"{{"user_account": "{}","token_in": "{}","token_out": "{}","amount": {},"slippage_bps": {}}}"#,
-                    SOLVER_ADDRESSES.get(1).unwrap(),
-                    token_in,
-                    usdt_contract_address,
-                    amount_in,
-                    100
-                );
+        let solver_out = if intent.dst_chain == "ethereum" {
+            SOLVER_ADDRESSES.get(0).unwrap()
+        } else if intent.dst_chain == "solana" {
+            SOLVER_ADDRESSES.get(1).unwrap()
+        }
+        else {
+            panic!("chain not supported, this should't happen");
+        };
 
-                if let Err(e) = jupiter_swap(&memo, &client, &from_keypair, SwapMode::ExactIn).await
-                {
-                    println!("Error on Solana swap token_in -> USDT: {e}");
-                } else {
-                    let balance_post = client
-                        .get_token_account_balance(&usdt_token_account)
-                        .await
-                        .unwrap()
-                        .ui_amount
-                        .unwrap();
+        // solver -> token_out -> user | user -> token_in -> solver
+        if let Err(e) = solana_send_funds_to_user(
+            intent_id,
+            &token_in,
+            &token_out,
+            &user_account,
+            solver_out.to_string(),
+            intent.src_chain == intent.dst_chain,
+        )
+        .await
+        {
+            return Err(format!(
+                "Error occurred on send token_out -> user & user sends token_in -> solver: {}",
+                e
+            ));
+        // swap token_in -> USDT
+        } else if intent.src_chain == intent.dst_chain
+            && !token_in.eq_ignore_ascii_case(usdt_contract_address)
+        {
+            let memo = format!(
+                r#"{{"user_account": "{}","token_in": "{}","token_out": "{}","amount": {},"slippage_bps": {}}}"#,
+                SOLVER_ADDRESSES.get(1).unwrap(),
+                token_in,
+                usdt_contract_address,
+                amount_in,
+                100
+            );
 
-                    let balance = if balance_post >= balance_ant {
-                        balance_post - balance_ant
-                    } else {
-                        balance_ant - balance_post
-                    };
-
-                    println!(
-                        "You have {} {} USDT on intent {intent_id}",
-                        if balance_post >= balance_ant {
-                            "won"
-                        } else {
-                            "lost"
-                        },
-                        balance
-                    );
-                }
+            if let Err(e) = jupiter_swap(&memo, &client, &from_keypair, SwapMode::ExactIn).await {
+                return Err(format!("Error on Solana swap token_in -> USDT: {e}"));
             }
+        }
+
+        if intent.src_chain == intent.dst_chain {
+            let balance_post = client
+                .get_token_account_balance(&usdt_token_account)
+                .await
+                .unwrap()
+                .ui_amount
+                .unwrap();
+
+            let balance = if balance_post >= balance_ant {
+                balance_post - balance_ant
+            } else {
+                balance_ant - balance_post
+            };
+
+            println!(
+                "You have {} {} USDT on intent {intent_id}",
+                if balance_post >= balance_ant {
+                    "won"
+                } else {
+                    "lost"
+                },
+                balance
+            );
         }
 
         Ok(())
     }
 
-    pub async fn solana_trasnfer_swap(intent: PostIntentInfo, amount: &str) -> Result<(), String> {
+    pub async fn solana_transfer_swap(intent: PostIntentInfo, amount: &str) -> Result<(), String> {
         let rpc_url = env::var("SOLANA_RPC").map_err(|_| "SOLANA_RPC must be set".to_string())?;
 
         let from_keypair_str =
@@ -351,6 +363,7 @@ pub mod solana_chain {
         token_in_mint: &str,
         token_out_mint: &str,
         user: &str,
+        solver_out: String,
         single_domain: bool,
     ) -> Result<(), String> {
         // Load the keypair from environment variable
@@ -421,12 +434,12 @@ pub mod solana_chain {
                             "CwmS7F8wL2Q54Kggd217Jj7BnbxaQFo7rmpFGi6QibDW",
                         )
                         .map_err(|e| format!("Invalid auctioneer pubkey: {}", e))?,
-                        token_in: Pubkey::from_str(&token_in_mint)
-                            .map_err(|e| format!("Invalid token_in_mint pubkey: {}", e))?,
+                        token_in: Some(Pubkey::from_str(&token_in_mint)
+                            .map_err(|e| format!("Invalid token_in_mint pubkey: {}", e))?),
                         token_out: Pubkey::from_str(&token_out_mint)
                             .map_err(|e| format!("Invalid token_out_mint pubkey: {}", e))?,
-                        auctioneer_token_in_account: token_in_escrow_addr,
-                        solver_token_in_account: solver_token_in_addr,
+                        auctioneer_token_in_account: Some(token_in_escrow_addr),
+                        solver_token_in_account: Some(solver_token_in_addr),
                         solver_token_out_account: solver_token_out_addr,
                         user_token_out_account: user_token_out_addr,
                         token_program: anchor_spl::token::ID,
@@ -446,7 +459,7 @@ pub mod solana_chain {
                     .args(bridge_escrow::instruction::SendFundsToUser {
                         intent_id: intent_id.to_string(),
                         hashed_full_denom: None,
-                        solver_out: None,
+                        solver_out: Some(solver_out),
                     })
                     .payer(solver_clone.clone())
                     .signer(&*solver_clone)
