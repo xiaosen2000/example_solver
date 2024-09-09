@@ -431,7 +431,7 @@ pub mod solana_chain {
                         intent: intent_state,
                         auctioneer_state,
                         auctioneer: Pubkey::from_str(
-                            "CwmS7F8wL2Q54Kggd217Jj7BnbxaQFo7rmpFGi6QibDW",
+                            "5zCZ3jk8EZnJyG7fhDqD6tmqiYTLZjik5HUpGMnHrZfC",
                         )
                         .map_err(|e| format!("Invalid auctioneer pubkey: {}", e))?,
                         token_in: Some(Pubkey::from_str(&token_in_mint)
