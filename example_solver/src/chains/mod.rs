@@ -103,8 +103,8 @@ struct TokenInfo {
 }
 
 pub static SOLVER_ADDRESSES: &[&str] = &[
-    "0x0362110922F923B57b7EfF68eE7A51827b2dF4b4", // ethereum
-    "CM7x9QG6ABALVcLxGNVdUpB9X6P6ZNL92VvmzBH1WPt6", // solana
+    "0x460c026eEEA4953D66c31EF74BCEAF2411e21C9A", // ethereum
+    "3E5Ntj6GP3a9FqnRFnfzFKbq9JjPDns6PsFPASPtHm9s", // solana
 ];
 
 lazy_static! {

@@ -12,10 +12,17 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0.117"
 reqwest = { version = "0.11", features = ["json"] }
 lazy_static = "1.4.0"
-ethers = { version = "2.0.14", default-features = true, features = ["ws","abigen"] }
+ethers = { version = "2.0.14", default-features = true, features = [
+    "ws",
+    "abigen",
+] }
 hex = "0.4.3"
-spl-associated-token-account = { version = "3.0.2", default-features = false, features = ["no-entrypoint"] }
-spl-token = { version = "3.2.0", default-features = false, features = ["no-entrypoint"] }
+spl-associated-token-account = { version = "3.0.2", default-features = false, features = [
+    "no-entrypoint",
+] }
+spl-token = { version = "3.2.0", default-features = false, features = [
+    "no-entrypoint",
+] }
 solana-client = "1.8.3"
 anchor-client = { version = "0.29.0" }
 solana-sdk = "1.17.30"
@@ -47,6 +54,3 @@ bridge-escrow = { git = "https://github.com/ComposableFi/emulated-light-client.g
 # https://github.com/dalek-cryptography/curve25519-dalek/pull/606
 aes-gcm-siv = { git = "https://github.com/RustCrypto/AEADs", rev = "6105d7a5591aefa646a95d12b5e8d3f55a9214ef" }
 curve25519-dalek = { git = "https://github.com/dalek-cryptography/curve25519-dalek", rev = "8274d5cbb6fc3f38cdc742b4798173895cd2a290" }
-
-
-
