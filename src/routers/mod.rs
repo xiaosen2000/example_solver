@@ -203,15 +203,14 @@ pub async fn get_simulate_swap_intent(
         .expect("COMISSION must be set")
         .parse::<u32>()
         .unwrap();
-
-    if amount_out_src_chain < BigInt::from(flat_fee_int) {
+    
+    let total_fee = flat_fee_int + (amount_out_src_chain.clone() * BigInt::from(comission) / BigInt::from(100_000));
+    if amount_out_src_chain < total_fee {
         return String::from("0");
     }
 
     // we substract the flat fees and the solver comission in USD
-    let amount_in_dst_chain = amount_out_src_chain.clone()
-        - (BigInt::from(flat_fee_int)
-            + (amount_out_src_chain * BigInt::from(comission) / BigInt::from(100_000)));
+    let amount_in_dst_chain = amount_out_src_chain - total_fee;
     let mut final_amount_out = amount_in_dst_chain.to_string();
 
     if !bridge_token_address_dst.eq_ignore_ascii_case(&token_out) {
