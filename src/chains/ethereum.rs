@@ -95,6 +95,18 @@ pub mod ethereum_chain {
         Ok(gas_price) // in wei
     }
 
+    pub async fn fetch_eip1559_fee() -> Result<(U256, U256), Box<dyn std::error::Error>> {
+        let eth_rpc_url = env::var("ETHEREUM_RPC")
+            .expect("ETHEREUM_RPC environment variable not set");
+        let provider = Provider::<Http>::try_from(eth_rpc_url)
+            .map_err(|e| format!("Failed to create provider: {}", e))?;
+        let provider = Arc::new(provider);
+        let (max_fee_per_gas, max_priority_fee_per_gas) = provider.estimate_eip1559_fees(None)
+            .await
+            .map_err(|e| format!("Failed to fetch gas price: {}", e))?;
+        Ok((max_fee_per_gas, max_priority_fee_per_gas)) // in wei
+    }
+
     pub async fn handle_ethereum_execution(
         intent: &PostIntentInfo,
         intent_id: &str,
@@ -401,13 +413,14 @@ pub mod ethereum_chain {
         };
 
         // Get gas
-        let base_fee_per_gas = fetch_eth_gas_price()
-            .await
-            .map_err(|e| format!("Failed to fetch gas price: {}", e))?;
+        // let base_fee_per_gas = fetch_eth_gas_price()
+        //     .await
+        //     .map_err(|e| format!("Failed to fetch gas price: {}", e))?;
 
-        let priority_fee_per_gas: u128 = 2_000_000_000; // This is already in wei
-        let max_fee_per_gas = base_fee_per_gas + priority_fee_per_gas;
+        // let priority_fee_per_gas: u128 = 2_000_000_000; // This is already in wei
+        // let max_fee_per_gas = base_fee_per_gas + priority_fee_per_gas;
 
+        let (max_fee_per_gas, max_priority_fee_per_gas) = fetch_eip1559_fee().await.unwrap();
         // EIP-1559 transaction
         let tx_object = web3::types::TransactionParameters {
             to: Some(to),
@@ -420,7 +433,7 @@ pub mod ethereum_chain {
             transaction_type: Some(web3::types::U64::from(2)),
             access_list: None,
             max_fee_per_gas: Some(U256::from(max_fee_per_gas)),
-            max_priority_fee_per_gas: Some(U256::from(priority_fee_per_gas)),
+            max_priority_fee_per_gas: Some(U256::from(max_priority_fee_per_gas)),
             ..Default::default()
         };
 
