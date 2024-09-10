@@ -11,6 +11,7 @@ use crate::chains::SOLVER_ADDRESSES;
 use crate::chains::SOLVER_ID;
 use crate::chains::SOLVER_PRIVATE_KEY;
 use crate::routers::get_simulate_swap_intent;
+use crate::routers::start_fee_updater;
 use chains::create_keccak256_signature;
 use ethers::types::U256;
 use futures::{SinkExt, StreamExt};
