@@ -14,26 +14,11 @@ pub mod ethereum_chain {
     use ethers::providers::{Http, Provider};
     use num_bigint::BigInt;
     use reqwest::Client;
-    use serde::Deserialize;
+    // use serde::Deserialize;
     use std::str::FromStr;
     use std::sync::Arc;
     use std::thread::sleep;
     use std::time::Duration;
-
-    #[derive(Deserialize)]
-    struct GasPrice {
-        #[serde(rename = "SafeGasPrice")]
-        _safe_gas_price: String,
-        #[serde(rename = "ProposeGasPrice")]
-        propose_gas_price: String,
-        #[serde(rename = "FastGasPrice")]
-        _fast_gas_price: String,
-    }
-
-    #[derive(Deserialize)]
-    struct GasResponse {
-        result: GasPrice,
-    }
 
     abigen!(
         ERC20,
@@ -97,6 +82,18 @@ pub mod ethereum_chain {
 
     pub const ESCROW_SC_ETHEREUM: &str = "0xA7C369Afd19E9866674B1704a520f42bC8958573";
     pub const PARASWAP: &str = "0x216b4b4ba9f3e719726886d34a177484278bfcae";
+
+    pub async fn fetch_eth_gas_price() -> Result<U256, Box<dyn std::error::Error>> {
+        let eth_rpc_url = env::var("ETHEREUM_RPC")
+            .expect("ETHEREUM_RPC environment variable not set");
+        let provider = Provider::<Http>::try_from(eth_rpc_url)
+            .map_err(|e| format!("Failed to create provider: {}", e))?;
+        let provider = Arc::new(provider);
+        let gas_price = provider.get_gas_price()
+            .await
+            .map_err(|e| format!("Failed to fetch gas price: {}", e))?;
+        Ok(gas_price) // in wei
+    }
 
     pub async fn handle_ethereum_execution(
         intent: &PostIntentInfo,
@@ -404,27 +401,10 @@ pub mod ethereum_chain {
         };
 
         // Get gas
-        let response =
-            reqwest::get("https://api.etherscan.io/api?module=gastracker&action=gasoracle")
-                .await
-                .map_err(|e| format!("Failed to fetch gas price: {}", e))?;
-
-        let gas_response: GasResponse = response
-            .json::<GasResponse>()
+        let base_fee_per_gas = fetch_eth_gas_price()
             .await
-            .map_err(|e| format!("Failed to parse gas response: {}", e))?;
+            .map_err(|e| format!("Failed to fetch gas price: {}", e))?;
 
-        // Parse the propose gas price as f64
-        let propose_gas_price_f64: f64 = gas_response
-            .result
-            .propose_gas_price
-            .parse()
-            .map_err(|e| format!("Failed to parse gas price: {}", e))?;
-
-        // Convert to wei (1 Gwei = 1e9 wei)
-        let propose_gas_price_wei: u128 = (propose_gas_price_f64 * 1e9) as u128;
-
-        let base_fee_per_gas = propose_gas_price_wei;
         let priority_fee_per_gas: u128 = 2_000_000_000; // This is already in wei
         let max_fee_per_gas = base_fee_per_gas + priority_fee_per_gas;
 
