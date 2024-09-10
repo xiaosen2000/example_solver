@@ -116,7 +116,7 @@ pub async fn update_flat_fees() -> Result<(), Box<dyn std::error::Error>> {
             store_intent: eth_store_intent,
             send_funds_to_user: eth_send_funds,
             on_receive_transfer: 0.008,
-            relayer_fee: 0.5 * sol_price,
+            relayer_fee: 0.05 * sol_price,
         }
     );
 
