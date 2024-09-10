@@ -11,7 +11,6 @@ use crate::chains::SOLVER_ADDRESSES;
 use crate::chains::SOLVER_ID;
 use crate::chains::SOLVER_PRIVATE_KEY;
 use crate::routers::get_simulate_swap_intent;
-use crate::routers::start_fee_updater;
 use chains::create_keccak256_signature;
 use ethers::types::U256;
 use futures::{SinkExt, StreamExt};
@@ -24,8 +23,12 @@ use tokio_tungstenite::tungstenite::protocol::Message;
 
 #[tokio::main]
 async fn main() {
-    start_fee_updater().await;
+
     dotenv::dotenv().ok();
+
+    //Start Fetching flat fee
+    // start_fee_updater().await;
+
     let server_addr = env::var("COMPOSABLE_ENDPOINT").expect("COMPOSABLE_ENDPOINT must be set in .env file");
     let (ws_stream, _) = connect_async(server_addr).await.expect("Failed to connect");
     let (mut ws_sender, mut ws_receiver) = ws_stream.split();

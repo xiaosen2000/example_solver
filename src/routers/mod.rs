@@ -2,7 +2,7 @@ pub mod jupiter;
 pub mod paraswap;
 
 // use ethers::providers::Middleware;
-use ethers::prelude::*;
+// use ethers::prelude::*;
 use serde_json::Value;
 use crate::chains::*;
 use crate::PostIntentInfo;
@@ -18,15 +18,15 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 
 // Constants for gas usage and costs
-const STORE_INTENT_GAS: u64 = 250_000;
-const SEND_FUNDS_TO_USER_GAS: u64 = 170_000;
-const ON_RECEIVE_TRANSFER_GAS: u64 = 150_000;
-const ETH_TO_SOL_BRIDGE_FEE: f64 = 0.05; // in SOL
+const STORE_INTENT_GAS: f64 = 250_000f64;
+const SEND_FUNDS_TO_USER_GAS: f64 = 170_000f64;
+const ON_RECEIVE_TRANSFER_GAS: f64 = 150_000f64;
+// const ETH_TO_SOL_BRIDGE_FEE: f64 = 0.05; // in SOL
 
 // Struct to hold fee information
 #[derive(Debug, Clone)]
-struct FeeInfo {
-    // In USD
+pub struct FeeInfo {
+    // In bridge token
     store_intent: f64, // called on des chian
     send_funds_to_user: f64, // called on des chian
     on_receive_transfer: f64, // when cross chain, called on src chain
@@ -58,8 +58,9 @@ pub async fn update_flat_fees() -> Result<(), Box<dyn std::error::Error>> {
     let eth_gas_price = fetch_eth_gas_price()
         .await
         .map_err(|e| format!("Failed to fetch gas price: {}", e))?;
-    let priority_fee_per_gas: u128 = 2_000_000_000; // This is already in wei
-    let max_fee_per_gas = eth_gas_price + priority_fee_per_gas;
+    println!("Updated Gas_FEES: {:?}", eth_gas_price);
+    let priority_fee_per_gas: u128 = 500_000_000; // This is already in wei
+    let max_fee_per_gas = (eth_gas_price + priority_fee_per_gas).as_u128() as f64;
 
     let eth_price = fetch_eth_price()
         .await
@@ -68,9 +69,9 @@ pub async fn update_flat_fees() -> Result<(), Box<dyn std::error::Error>> {
         .await
         .map_err(|e| format!("Failed to fetch sol price: {}", e))?;
     // Ethereum single-domain fees
-    let eth_store_intent = max_fee_per_gas * eth_price / 1e18;
-    let eth_send_funds = max_fee_per_gas.mul(U256::from(SEND_FUNDS_TO_USER_GAS)) * eth_price / 1e18;
-    let eth_on_receive = max_fee_per_gas * eth_price / 1e18;
+    let eth_store_intent = STORE_INTENT_GAS * max_fee_per_gas * eth_price / 1e18;
+    let eth_send_funds = SEND_FUNDS_TO_USER_GAS * max_fee_per_gas * eth_price / 1e18;
+    let eth_on_receive = ON_RECEIVE_TRANSFER_GAS * max_fee_per_gas * eth_price / 1e18;
 
     // Solana single-domain fees
     // let sol_store_intent = 0.008;
@@ -132,16 +133,16 @@ pub async fn get_flat_fee(src_chain: &str, dst_chain: &str) -> Result<f64, Box<d
     Ok(total_fee)
 }
 
-pub async fn start_fee_updater() {
-    tokio::spawn(async {
-        loop {
-            if let Err(e) = update_flat_fees().await {
-                eprintln!("Error updating flat fees: {:?}", e);
-            }
-            tokio::time::sleep(tokio::time::Duration::from_secs(300)).await; // Update every 5 minutes
-        }
-    });
-}
+// pub async fn start_fee_updater() {
+//     tokio::spawn(async {
+//         loop {
+//             if let Err(e) = update_flat_fees().await {
+//                 eprintln!("Error updating flat fees: {:?}", e);
+//             }
+//             tokio::time::sleep(tokio::time::Duration::from_secs(300)).await; // Update every 5 minutes
+//         }
+//     });
+// }
 
 pub async fn get_simulate_swap_intent(
     intent_info: &PostIntentInfo,
@@ -170,7 +171,7 @@ pub async fn get_simulate_swap_intent(
     let mut amount_out_src_chain = BigInt::from_str(&amount_in).unwrap();
 
     if !bridge_token_address_src.eq_ignore_ascii_case(&token_in) {
-        // simulate token_in -> USDT
+        // simulate token_in -> bridge token
         if src_chain == "ethereum" {
             amount_out_src_chain =
                 ethereum_simulate_swap(&token_in, &amount_in, bridge_token_address_src).await;
@@ -190,23 +191,26 @@ pub async fn get_simulate_swap_intent(
 
     let (bridge_token_address_dst, _) = get_token_info(bridge_token, dst_chain).unwrap();
 
+    // update the flat fee
+    if let Err(e) = update_flat_fees().await {
+            eprintln!("Error updating flat fees: {:?}", e);
+        }
     // get flat fees
-    let flat_fee = get_flat_fee(src_chain, dst_chain).await
-        .unwrap_or_else(|_| 0.0);
-
+    let flat_fee = get_flat_fee(src_chain, dst_chain).await.unwrap();
+    let flat_fee_int = (flat_fee * 10e6).round().to_u128().unwrap();
     // get comission
     let comission = env::var("COMISSION")
         .expect("COMISSION must be set")
         .parse::<u32>()
         .unwrap();
 
-    if amount_out_src_chain < BigInt::from(flat_fee + comission) {
+    if amount_out_src_chain < BigInt::from(flat_fee_int) {
         return String::from("0");
     }
 
     // we substract the flat fees and the solver comission in USD
     let amount_in_dst_chain = amount_out_src_chain.clone()
-        - (BigInt::from(flat_fee)
+        - (BigInt::from(flat_fee_int)
             + (amount_out_src_chain * BigInt::from(comission) / BigInt::from(100_000)));
     let mut final_amount_out = amount_in_dst_chain.to_string();
 

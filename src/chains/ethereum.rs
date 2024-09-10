@@ -1,7 +1,7 @@
 pub mod ethereum_chain {
     use crate::chains::get_token_info;
     use crate::chains::OperationOutput;
-    use crate::env;
+    use std::env;
     use crate::json;
     use crate::routers::paraswap::paraswap_router::simulate_swap_paraswap;
     use crate::routers::paraswap::paraswap_router::ParaswapParams;

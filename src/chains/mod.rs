@@ -4,7 +4,7 @@ pub mod solana;
 use lazy_static::lazy_static;
 use std::collections::HashMap;
 
-use crate::env;
+use std::env;
 use ethers::prelude::*;
 use ethers::signers::LocalWallet;
 use ethers::utils::hash_message;
