@@ -80,7 +80,7 @@ pub mod ethereum_chain {
         ]"#
     );
 
-    pub const ESCROW_SC_ETHEREUM: &str = "0xA7C369Afd19E9866674B1704a520f42bC8958573";
+    pub const ESCROW_SC_ETHEREUM: &str = "0x3d34b4Ff589f9B97f8a5540feC1c2ABAB9D4C64c";
     pub const PARASWAP: &str = "0x216b4b4ba9f3e719726886d34a177484278bfcae";
 
     pub async fn fetch_eth_gas_price() -> Result<U256, Box<dyn std::error::Error>> {
