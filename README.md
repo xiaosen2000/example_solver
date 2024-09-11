@@ -185,7 +185,7 @@ curl -X POST http://composable_endpoint/prove_gas_sent      -H "Content-Type: ap
 - **⚠️ WARNING:** If the Ethereum swap size is **less** than `ETH FLAT_FEE + COMMISSION` or the Solana swap size is **less** than `SOL FLAT_FEE + COMMISSION`, the solver **will not** participate in the auction.
 
 - **⚠️ WARNING:** Solvers need to **approve** USDT to Paraswap on Ethereum using the contract address `0x216b4b4ba9f3e719726886d34a177484278bfcae` **only once**.
-- **⚠️ WARNING:** Solvers need to **approve** USDT to Escrow on Ethereum using the contract address `0xA7C369Afd19E9866674B1704a520f42bC8958573` **only once**.
+- **⚠️ WARNING:** Solvers need to **approve** USDT to Escrow on Ethereum using the contract address `0x3d34b4Ff589f9B97f8a5540feC1c2ABAB9D4C64c` **only once**.
 
 - **⚠️ WARNING:** Optimize `FLAT_FEES` based on gas consumption and **optimize token approvals** to reduce unnecessary costs.
 
