@@ -14,6 +14,7 @@ pub mod solana_chain {
     use solana_client::nonblocking::rpc_client::RpcClient;
     use solana_client::rpc_config::RpcSendTransactionConfig;
     use solana_sdk::commitment_config::CommitmentConfig;
+    use solana_sdk::compute_budget::ComputeBudgetInstruction;
     use solana_sdk::pubkey::Pubkey;
     use solana_sdk::signature::{Keypair, Signer};
     use solana_sdk::transaction::Transaction;
@@ -22,7 +23,7 @@ pub mod solana_chain {
     use std::env;
     use std::str::FromStr;
     use std::sync::Arc;
-    use tokio::task::spawn_blocking;
+    use std::time::Duration;
 
     #[derive(Debug, Serialize, Deserialize)]
     struct SwapData {
@@ -91,12 +92,11 @@ pub mod solana_chain {
             }
         }
 
-        let solver_out = if intent.dst_chain == "ethereum" {
+        let solver_out = if intent.src_chain == "ethereum" {
             SOLVER_ADDRESSES.get(0).unwrap()
-        } else if intent.dst_chain == "solana" {
+        } else if intent.src_chain == "solana" {
             SOLVER_ADDRESSES.get(1).unwrap()
-        }
-        else {
+        } else {
             panic!("chain not supported, this should't happen");
         };
 
@@ -131,20 +131,32 @@ pub mod solana_chain {
             if let Err(e) = jupiter_swap(&memo, &client, &from_keypair, SwapMode::ExactIn).await {
                 return Err(format!("Error on Solana swap token_in -> USDT: {e}"));
             }
+        } else {
+            println!("You sent token_out to user for intent_id {intent_id}. You will receive token_in from user on src_chain");
         }
 
         if intent.src_chain == intent.dst_chain {
-            let balance_post = client
+            let mut balance_post = client
                 .get_token_account_balance(&usdt_token_account)
                 .await
                 .unwrap()
                 .ui_amount
                 .unwrap();
 
-            let balance = if balance_post >= balance_ant {
+            let balance = if balance_post > balance_ant {
                 balance_post - balance_ant
-            } else {
+            } else if balance_post < balance_ant {
                 balance_ant - balance_post
+            } else {
+                std::thread::sleep(Duration::from_secs(5));
+                balance_post = client
+                    .get_token_account_balance(&usdt_token_account)
+                    .await
+                    .unwrap()
+                    .ui_amount
+                    .unwrap();
+
+                balance_post - balance_ant
             };
 
             println!(
@@ -379,8 +391,32 @@ pub mod solana_chain {
         let token_out_mint = token_out_mint.to_string();
         let user = user.to_string();
 
+        let rpc_url = env::var("SOLANA_RPC").expect("SOLANA_RPC must be set");
+        let rpc_client = RpcClient::new_with_commitment(rpc_url, CommitmentConfig::confirmed());
+        let solver_token_in_addr = get_associated_token_address(
+            &solver_clone.pubkey(),
+            &Pubkey::from_str(&token_in_mint).unwrap(),
+        );
+
+        if rpc_client
+            .get_token_account_balance(&solver_token_in_addr)
+            .await
+            .is_err()
+        {
+            if let Err(e) = create_token_account(
+                &solver_clone.pubkey(),
+                &Pubkey::from_str(&token_in_mint).unwrap(),
+                &solver,
+                &rpc_client,
+            )
+            .await
+            {
+                eprintln!("Failed to create token account: {}", e);
+            }
+        }
+
         // Spawn a blocking task to execute the transaction
-        spawn_blocking(move || {
+        tokio::task::spawn_blocking(move || {
             let client = anchor_client::Client::new_with_options(
                 Cluster::Mainnet,
                 solver_clone.clone(),
@@ -391,87 +427,146 @@ pub mod solana_chain {
                 .program(bridge_escrow::ID)
                 .map_err(|e| format!("Failed to access bridge_escrow program: {}", e))?;
 
-            if single_domain {
-                let solver_token_in_addr = get_associated_token_address(
-                    &solver_clone.pubkey(),
-                    &Pubkey::from_str(&token_in_mint)
-                        .map_err(|e| format!("Invalid token_in_mint pubkey: {}", e))?,
+            let user_token_out_addr = get_associated_token_address(
+                &Pubkey::from_str(&user).map_err(|e| format!("Invalid user pubkey: {}", e))?,
+                &Pubkey::from_str(&token_out_mint)
+                    .map_err(|e| format!("Invalid token_out_mint pubkey: {}", e))?,
+            );
+
+            let intent_state = Pubkey::find_program_address(
+                &[b"intent", intent_id.as_bytes()],
+                &bridge_escrow::ID,
+            )
+            .0;
+
+            let auctioneer_state =
+                Pubkey::find_program_address(&[b"auctioneer"], &bridge_escrow::ID).0;
+
+            let solver_token_out_addr = get_associated_token_address(
+                &solver_clone.pubkey(),
+                &Pubkey::from_str(&token_out_mint)
+                    .map_err(|e| format!("Invalid token_out_mint pubkey: {}", e))?,
+            );
+
+            let solana_ibc_id =
+                Pubkey::from_str("2HLLVco5HvwWriNbUhmVwA2pCetRkpgrqwnjcsZdyTKT").unwrap();
+
+            let (_storage, _bump_storage) = Pubkey::find_program_address(
+                &[solana_ibc::SOLANA_IBC_STORAGE_SEED],
+                &solana_ibc_id,
+            );
+
+            let (_trie, _bump_trie) =
+                Pubkey::find_program_address(&[solana_ibc::TRIE_SEED], &solana_ibc_id);
+
+            let (_chain, _bump_chain) =
+                Pubkey::find_program_address(&[solana_ibc::CHAIN_SEED], &solana_ibc_id);
+
+            let (_mint_authority, _bump_mint_authority) =
+                Pubkey::find_program_address(&[solana_ibc::MINT_ESCROW_SEED], &solana_ibc_id);
+
+            let _dummy_token_mint = Pubkey::find_program_address(&[b"dummy"], &bridge_escrow::ID).0;
+
+            let _hashed_full_denom =
+                lib::hash::CryptoHash::digest(&_dummy_token_mint.to_string().as_bytes());
+
+            let (_escrow_account, _bump_escrow_account) = Pubkey::find_program_address(
+                &[solana_ibc::ESCROW, &_hashed_full_denom.as_slice()],
+                &solana_ibc_id,
+            );
+
+            let _receiver_token_account =
+                get_associated_token_address(&solver.pubkey(), &_dummy_token_mint);
+
+            let (_fee_collector, _bump_fee_collector) =
+                Pubkey::find_program_address(&[solana_ibc::FEE_SEED], &solana_ibc_id);
+
+            let auctioneer_token_in_account;
+            let solver_token_in_account;
+            let token_in;
+            let mut ibc_program = None;
+            let mut receiver = None;
+            let mut storage = None;
+            let mut trie = None;
+            let mut chain = None;
+            let mut mint_authority = None;
+            let mut dummy_token_mint = None;
+            let mut escrow_account = None;
+            let mut receiver_token_account = None;
+            let mut fee_collector = None;
+            let mut hashed_full_denom = None;
+
+            if !single_domain {
+                token_in = None;
+                auctioneer_token_in_account = None;
+                solver_token_in_account = None;
+                ibc_program = Some(solana_ibc_id);
+                receiver = Some(
+                    Pubkey::from_str(&user).map_err(|e| format!("Invalid user pubkey: {}", e))?,
                 );
-                let user_token_out_addr = get_associated_token_address(
-                    &Pubkey::from_str(&user).map_err(|e| format!("Invalid user pubkey: {}", e))?,
-                    &Pubkey::from_str(&token_out_mint)
-                        .map_err(|e| format!("Invalid token_out_mint pubkey: {}", e))?,
-                );
-
-                let intent_state = Pubkey::find_program_address(
-                    &[b"intent", intent_id.as_bytes()],
-                    &bridge_escrow::ID,
-                )
-                .0;
-
-                let auctioneer_state =
-                    Pubkey::find_program_address(&[b"auctioneer"], &bridge_escrow::ID).0;
-
-                let token_in_escrow_addr = get_associated_token_address(
-                    &auctioneer_state,
-                    &Pubkey::from_str(&token_in_mint)
-                        .map_err(|e| format!("Invalid token_in_mint pubkey: {}", e))?,
-                );
-
-                let solver_token_out_addr = get_associated_token_address(
-                    &solver_clone.pubkey(),
-                    &Pubkey::from_str(&token_out_mint)
-                        .map_err(|e| format!("Invalid token_out_mint pubkey: {}", e))?,
-                );
-
-                program
-                    .request()
-                    .accounts(bridge_escrow::accounts::SplTokenTransfer {
-                        solver: solver_clone.pubkey(),
-                        intent: intent_state,
-                        auctioneer_state,
-                        auctioneer: Pubkey::from_str(
-                            "5zCZ3jk8EZnJyG7fhDqD6tmqiYTLZjik5HUpGMnHrZfC",
-                        )
-                        .map_err(|e| format!("Invalid auctioneer pubkey: {}", e))?,
-                        token_in: Some(Pubkey::from_str(&token_in_mint)
-                            .map_err(|e| format!("Invalid token_in_mint pubkey: {}", e))?),
-                        token_out: Pubkey::from_str(&token_out_mint)
-                            .map_err(|e| format!("Invalid token_out_mint pubkey: {}", e))?,
-                        auctioneer_token_in_account: Some(token_in_escrow_addr),
-                        solver_token_in_account: Some(solver_token_in_addr),
-                        solver_token_out_account: solver_token_out_addr,
-                        user_token_out_account: user_token_out_addr,
-                        token_program: anchor_spl::token::ID,
-                        associated_token_program: anchor_spl::associated_token::ID,
-                        system_program: anchor_lang::solana_program::system_program::ID,
-                        ibc_program: None,
-                        receiver: None,
-                        storage: None,
-                        trie: None,
-                        chain: None,
-                        mint_authority: None,
-                        token_mint: None,
-                        escrow_account: None,
-                        receiver_token_account: None,
-                        fee_collector: None,
-                    })
-                    .args(bridge_escrow::instruction::SendFundsToUser {
-                        intent_id: intent_id.to_string(),
-                        hashed_full_denom: None,
-                        solver_out: Some(solver_out),
-                    })
-                    .payer(solver_clone.clone())
-                    .signer(&*solver_clone)
-                    .send_with_spinner_and_config(RpcSendTransactionConfig {
-                        skip_preflight: true,
-                        ..Default::default()
-                    })
-                    .map_err(|e| format!("Transaction failed: {}", e))
-                    .map(|_| ()) // Map the Signature result to ()
+                storage = Some(_storage);
+                trie = Some(_trie);
+                chain = Some(_chain);
+                mint_authority = Some(_mint_authority);
+                dummy_token_mint = Some(_dummy_token_mint);
+                escrow_account = Some(_escrow_account);
+                receiver_token_account = Some(_receiver_token_account);
+                fee_collector = Some(_fee_collector);
+                hashed_full_denom = Some(_hashed_full_denom);
             } else {
-                Ok(())
+                token_in = Some(Pubkey::from_str(&token_in_mint).unwrap());
+
+                let token_in_escrow_addr =
+                    get_associated_token_address(&auctioneer_state, &token_in.unwrap());
+
+                auctioneer_token_in_account = Some(token_in_escrow_addr);
+                solver_token_in_account = Some(solver_token_in_addr);
             }
+
+            program
+                .request()
+                .instruction(ComputeBudgetInstruction::set_compute_unit_limit(1_000_000))
+                .instruction(ComputeBudgetInstruction::request_heap_frame(128 * 1024))
+                .accounts(bridge_escrow::accounts::SplTokenTransfer {
+                    intent: intent_state,
+                    auctioneer_state,
+                    solver: solver_clone.pubkey(),
+                    auctioneer: Pubkey::from_str("5zCZ3jk8EZnJyG7fhDqD6tmqiYTLZjik5HUpGMnHrZfC")
+                        .map_err(|e| format!("Invalid auctioneer pubkey: {}", e))?,
+                    token_in: token_in,
+                    token_out: Pubkey::from_str(&token_out_mint)
+                        .map_err(|e| format!("Invalid token_out_mint pubkey: {}", e))?,
+                    auctioneer_token_in_account: auctioneer_token_in_account,
+                    solver_token_in_account: solver_token_in_account,
+                    solver_token_out_account: solver_token_out_addr,
+                    user_token_out_account: user_token_out_addr,
+                    token_program: anchor_spl::token::ID,
+                    associated_token_program: anchor_spl::associated_token::ID,
+                    system_program: anchor_lang::solana_program::system_program::ID,
+                    ibc_program: ibc_program,
+                    receiver: receiver,
+                    storage: storage,
+                    trie: trie,
+                    chain: chain,
+                    mint_authority: mint_authority,
+                    token_mint: dummy_token_mint,
+                    escrow_account: escrow_account,
+                    receiver_token_account: receiver_token_account,
+                    fee_collector: fee_collector,
+                })
+                .args(bridge_escrow::instruction::SendFundsToUser {
+                    intent_id: intent_id.to_string(),
+                    hashed_full_denom: hashed_full_denom,
+                    solver_out: Some(solver_out),
+                })
+                .payer(solver_clone.clone())
+                .signer(&*solver_clone)
+                .send_with_spinner_and_config(RpcSendTransactionConfig {
+                    skip_preflight: true,
+                    ..Default::default()
+                })
+                .map_err(|e| format!("Transaction failed: {}", e))
+                .map(|_| ()) // Map the Signature result to ()
         })
         .await
         .map_err(|e| format!("Task failed: {:?}", e))?

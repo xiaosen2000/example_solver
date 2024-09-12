@@ -150,7 +150,7 @@ pub mod ethereum_chain {
         if !token_out.eq_ignore_ascii_case(usdt_contract_address) {
             if let Err(e) = ethereum_trasnfer_swap(intent_id, intent.clone(), amount).await {
                 return Err(format!(
-                    "Error occurred on Ethereum swap USDT -> token_out (manual swap required): {}",
+                    "Error occurred on Ethereum swap USDT -> token_out (solver must approve USDT to Paraswap 0x216b4b4ba9f3e719726886d34a177484278bfcae first): {}",
                     e
                 ));
             }
@@ -169,12 +169,11 @@ pub mod ethereum_chain {
             }
         }
 
-        let solver_out = if intent.dst_chain == "ethereum" {
+        let solver_out = if intent.src_chain == "ethereum" {
             SOLVER_ADDRESSES.get(0).unwrap()
-        } else if intent.dst_chain == "solana" {
+        } else if intent.src_chain == "solana" {
             SOLVER_ADDRESSES.get(1).unwrap()
-        }
-        else {
+        } else {
             panic!("chain not supported, this should't happen");
         };
 
@@ -189,10 +188,12 @@ pub mod ethereum_chain {
         )
         .await
         {
-            println!("Error occurred on Ethereum send token_out -> user & user sends token_in -> solver: {}", e);
+            println!("Error occurred on Ethereum send token_out -> user & user sends token_in -> solver (solver must approve USDT to Escrow 0xA7C369Afd19E9866674B1704a520f42bC8958573 first): {}", e);
             return Err(e.to_string());
         // swap token_in -> USDT
-        } else if intent.src_chain == intent.dst_chain && !token_in.eq_ignore_ascii_case(usdt_contract_address) {
+        } else if intent.src_chain == intent.dst_chain
+            && !token_in.eq_ignore_ascii_case(usdt_contract_address)
+        {
             if let Err(e) =
                 approve_erc20(&rpc_url, &private_key, &token_in, PARASWAP, &amount_in).await
             {
