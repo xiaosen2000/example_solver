@@ -133,9 +133,10 @@ async fn main() {
                         .get("msg")
                         .unwrap()
                         .get("amount")
-                        .and_then(Value::as_str)
-                        .unwrap();
-                    let msg = parsed
+                        .and_then(Value::as_str);
+
+                    if let Some(amount) = amount {
+                        let msg = parsed
                         .get("msg")
                         .unwrap()
                         .get("msg")
@@ -169,6 +170,7 @@ async fn main() {
                         intents.remove(&intent_id.to_string());
                         drop(intents);
                     }
+                    }
                 }
             }
             Ok(Message::Close(_)) | Err(_) => break,
@@ -178,3 +180,4 @@ async fn main() {
 
     println!("Auctioner went down, please reconnect");
 }
+
