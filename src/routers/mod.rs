@@ -197,7 +197,7 @@ pub async fn get_simulate_swap_intent(
         }
     // get flat fees
     let flat_fee = get_flat_fee(src_chain, dst_chain).await.unwrap();
-    let flat_fee_int = (flat_fee * 10e6).round().to_u128().unwrap();
+    let flat_fee_int = (flat_fee * 1e6).round().to_u128().unwrap();
     // get comission
     let comission = env::var("COMISSION")
         .expect("COMISSION must be set")
